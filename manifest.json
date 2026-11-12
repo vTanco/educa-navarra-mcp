@@ -1,0 +1,56 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/dist/mcpb-manifest.schema.json",
+  "manifest_version": "0.3",
+  "name": "educa-navarra-mcp",
+  "display_name": "Educa Navarra: notas de evaluación",
+  "version": "0.0.0",
+  "description": "Mete las notas de evaluación en Educa (Navarra) desde tu Excel o CSV. Nada se guarda sin tu confirmación.",
+  "long_description": "Conector **no oficial** para docentes de la red pública de Navarra. Claude abre Educa en una ventana de Chrome o Edge de tu ordenador, cruza tu Excel o CSV con la lista de alumnos, te enseña una vista previa y escribe las notas en pantalla. Solo pulsa *Aceptar* cuando tú lo confirmas, y nunca cierra, firma ni publica una evaluación.\n\nSirve para ESO (IN/SU/BI/NT/SB), Bachillerato (nota sobre 10) y FP. Todo se ejecuta en tu ordenador: tus credenciales y los datos de tu alumnado no salen de él salvo lo que tú compartas en el chat.\n\nUsuario y contraseña son opcionales: si los dejas vacíos, inicias sesión tú en la ventana que se abre.",
+  "author": {
+    "name": "vTanco",
+    "url": "https://github.com/vTanco"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vTanco/educa-navarra-mcp"
+  },
+  "homepage": "https://github.com/vTanco/educa-navarra-mcp",
+  "documentation": "https://github.com/vTanco/educa-navarra-mcp#readme",
+  "support": "https://github.com/vTanco/educa-navarra-mcp/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "EDUCA_USER": "${user_config.usuario}",
+        "EDUCA_PASSWORD": "${user_config.clave}"
+      }
+    }
+  },
+  "tools": [],
+  "tools_generated": false,
+  "keywords": ["educa", "navarra", "notas", "calificaciones", "evaluación", "docentes", "lomloe"],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=20.3.0" }
+  },
+  "user_config": {
+    "usuario": {
+      "type": "string",
+      "title": "Usuario de Educa (opcional)",
+      "description": "El mismo con el que entras en Educa. Si lo dejas vacío, inicias sesión tú en la ventana del navegador.",
+      "required": false
+    },
+    "clave": {
+      "type": "string",
+      "title": "Contraseña de Educa (opcional)",
+      "description": "Se guarda cifrada en tu ordenador y solo se escribe en el formulario de acceso de Educa. Nunca pasa por el chat.",
+      "sensitive": true,
+      "required": false
+    }
+  }
+}

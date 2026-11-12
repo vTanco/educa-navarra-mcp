@@ -1,0 +1,21 @@
+{
+  "baseUrl": "https://educa.navarra.es/",
+  "allowedHosts": [
+    "educa.navarra.es",
+    "navarra.es"
+  ],
+  "headless": false,
+  "loginTimeoutMinutes": 5,
+  "login": {},
+  "gradeSheet": {},
+  "grades": {
+    "min": 1,
+    "max": 10,
+    "integerOnly": true,
+    "decimalSeparator": ",",
+    "extraValues": []
+  },
+  "save": {
+    "buttonTextPattern": "^\\s*(guardar|grabar|guardar cambios|aceptar)\\s*$"
+  }
+}

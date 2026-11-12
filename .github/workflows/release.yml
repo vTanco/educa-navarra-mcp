@@ -1,0 +1,48 @@
+name: Publicar versión
+
+# Se lanza al subir una etiqueta vX.Y.Z (ver docs/PUBLICAR.md).
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write # crear la versión en GitHub con el .mcpb
+  id-token: write # publicación en npm sin tokens (trusted publishing) y procedencia
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+      - name: Comprobar que la etiqueta coincide con package.json
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "La etiqueta $GITHUB_REF_NAME no coincide con la versión $v de package.json"; exit 1; }
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run smoke
+      - run: npm run pack:mcpb
+      - name: Crear la versión en GitHub con el paquete de Claude Desktop
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" build/educa-navarra-mcp.mcpb \
+            --title "$GITHUB_REF_NAME" --notes "Descarga **educa-navarra-mcp.mcpb** y haz doble clic para instalarlo en Claude Desktop. Cambios: ver CHANGELOG.md."
+      - name: Publicar en npm
+        run: |
+          npm install -g npm@latest
+          if npm view "educa-navarra-mcp@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
+            echo "Esta versión ya está en npm; no se vuelve a publicar."
+          else
+            npm publish --provenance --access public
+          fi
+        env:
+          # Vacío si se usa trusted publishing; si no, crea el secreto NPM_TOKEN en el repo.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

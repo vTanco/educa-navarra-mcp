@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+*.mcpb
+educa.config.json
+credenciales.json
+*.png
+!assets/*.png
+.DS_Store
