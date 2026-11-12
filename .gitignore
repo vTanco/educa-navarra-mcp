@@ -3,6 +3,7 @@ dist/
 build/
 *.mcpb
 educa.config.json
+!test/mock/educa.config.json
 credenciales.json
 *.png
 !assets/*.png

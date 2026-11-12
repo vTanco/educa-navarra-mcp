@@ -10,8 +10,8 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { type BrowserContext, type Frame, type Locator, type Page } from "playwright";
 import { loadCredentials, type EducaConfig } from "./config.js";
-import { launchEducaBrowser } from "./launch.js";
 import type { GradeSheet } from "./grades.js";
+import { launchEducaBrowser } from "./launch.js";
 
 export class EducaBrowser {
   private context: BrowserContext | null = null;
@@ -272,7 +272,11 @@ export class EducaBrowser {
 
   // ---------- Tabla de notas ----------
 
-  async readGradeSheet(column?: string): Promise<GradeSheet> {
+  /**
+   * Lee la tabla de notas. Con probeOptions abre (y cierra con Escape, sin elegir nada) el
+   * desplegable de la primera nota editable para conocer las opciones reales de esa pantalla.
+   */
+  async readGradeSheet(column?: string, probeOptions = false): Promise<GradeSheet> {
     const page = await this.page();
     let best: GradeSheet | null = null;
     let bestScore = -1;
@@ -288,7 +292,29 @@ export class EducaBrowser {
     if (!best || best.rows.length === 0) {
       throw new Error("No encuentro una tabla de notas con campos editables en la página actual. Navega en Educa hasta la pantalla de calificaciones del grupo, materia y evaluación (puedes usar educa_click / educa_select_filter) y vuelve a intentarlo.");
     }
+    if (probeOptions) await this.probeOptions(best).catch(() => undefined);
     return best;
+  }
+
+  private async probeOptions(sheet: GradeSheet): Promise<void> {
+    const fields = sheet.rows.map(r => r.field).filter((f): f is NonNullable<typeof f> => f !== null && !f.disabled);
+    const first = fields.find(f => f.type === "p-select" || f.type === "p-select-editable");
+    if (!first) return;
+    const page = await this.page();
+    const loc = await this.locateField(first.key);
+    if (!loc) return;
+    const opener = first.type === "p-select" ? loc : loc.locator("xpath=ancestor::p-select[1]").locator(".p-select-dropdown, [data-pc-section=dropdown]").first();
+    if ((await opener.count()) === 0) return;
+    await opener.scrollIntoViewIfNeeded().catch(() => undefined);
+    await opener.click({ timeout: 3000 });
+    const items = page.locator(".p-select-overlay li[role=option]").filter({ visible: true });
+    await items.first().waitFor({ state: "visible", timeout: 2500 }).catch(() => undefined);
+    const texts = (await items.allInnerTexts().catch(() => [] as string[])).map(t => t.replace(/\s+/g, " ").trim()).filter(Boolean);
+    await page.keyboard.press("Escape").catch(() => undefined);
+    await page.waitForTimeout(200);
+    if (!texts.length) return; // no se han podido leer: se mantiene lo deducido de la leyenda
+    const options = [...new Set(texts)].map(t => ({ value: t, text: t }));
+    for (const f of fields) if (f.type === first.type) f.options = options;
   }
 
   private async locateField(key: string): Promise<Locator | null> {
@@ -673,7 +699,9 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
       return { index, name, ...(studentId ? { studentId } : {}), field };
     });
     // Verificado en el Educa real: al cambiar una nota la celda queda "modificado" y aparecen Aceptar/Cancelar; no se guarda sola
-    return { headers: allHeaders, column: target, rows: rowsOut, editableColumns, autoSaves: false };
+    const ctx = [...document.querySelectorAll("app-selector-grupo-asignatura-anidado p-select [role=combobox]:not(.p-placeholder), app-selector-grupo-asignatura-anidado li[role=option][aria-selected=true], h1, h2, h3")]
+      .map(e => clean(e.textContent)).filter((t, i, a) => t && a.indexOf(t) === i).join(" · ").slice(0, 300);
+    return { headers: allHeaders, column: target, rows: rowsOut, editableColumns, autoSaves: false, context: ctx };
   }
 
   // 1. Filas candidatas
@@ -778,6 +806,8 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
         value: el.value,
         valueText: isSelect ? clean((el as HTMLSelectElement).selectedOptions[0]?.textContent) : el.value,
         disabled: el.disabled || (el as HTMLInputElement).readOnly === true,
+        ...(el instanceof HTMLInputElement && el.min !== "" && !isNaN(Number(el.min)) ? { min: Number(el.min) } : {}),
+        ...(el instanceof HTMLInputElement && el.max !== "" && !isNaN(Number(el.max)) ? { max: Number(el.max) } : {}),
         ...(isSelect ? { options: [...(el as HTMLSelectElement).options].map(o => ({ value: o.value, text: clean(o.textContent) })) } : {})
       };
     }
@@ -785,5 +815,10 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
   });
 
   const column_ = sel.gradeFieldSelector ? out.find(r => r.field)?.field?.header ?? null : targetPos !== null ? headers[targetPos] || `columna ${targetPos + 1}` : null;
-  return { headers: headers.map((h, i) => h || `columna ${i + 1}`), column: column_, rows: out, editableColumns };
+  // Contexto: títulos y filtros elegidos (grupo, materia, evaluación) fuera de las filas de notas
+  const context = [
+    ...[...document.querySelectorAll("h1, h2, h3")].map(e => clean(e.textContent)),
+    ...[...document.querySelectorAll("select")].filter(s2 => !rows.some(r => r.contains(s2))).map(s2 => clean(s2.selectedOptions[0]?.textContent))
+  ].filter((t2, i, a) => t2 && a.indexOf(t2) === i).join(" · ").slice(0, 300);
+  return { headers: headers.map((h, i) => h || `columna ${i + 1}`), column: column_, rows: out, editableColumns, context };
 }

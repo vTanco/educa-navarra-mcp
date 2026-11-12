@@ -91,11 +91,14 @@ try {
   // --- Disposición real de Educa-Gestión: tarjetas, desplegables PrimeNG, notas cualitativas y guardado automático
   await call("educa_navigate", { url: url + "cuaderno" });
   const real = await call("educa_read_grade_sheet", { response_format: "json" });
-  const rs = real.structuredContent as { column: string; students: { name: string; editable: boolean }[] };
+  const rs = real.structuredContent as { column: string; stage: string; scale: { kind: string; values: string[] }; students: { name: string; editable: boolean }[] };
   assert.equal(rs.column, "1Ev");
+  assert.equal(rs.stage, "eso");
+  assert.equal(rs.scale.kind, "terminos");
+  assert.deepEqual(rs.scale.values, ["SB", "NT", "BI", "SU", "IN", "FPEX"]);
   assert.equal(rs.students.length, 6);
   assert.equal(rs.students[0].name, "GARCÍA LÓPEZ, Ana");
-  const pv = await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }, { student: "Pérez Martínez, Iñigo", grade: "SU" }, { student: "Ruiz Arana, Pablo", grade: "3" }, { student: "López Sanz, Marta", grade: "6" }], response_format: "json" });
+  const pv = await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }, { student: "Pérez Martínez, Iñigo", grade: "Suficiente" }, { student: "Ruiz Arana, Pablo", grade: "3" }, { student: "López Sanz, Marta", grade: "6" }], response_format: "json" });
   const pp = pv.structuredContent as { plan_id: string; summary: Record<string, number> };
   assert.equal(pp.summary.cambia, 3);
   assert.equal(pp.summary.campo_bloqueado, 1);
@@ -107,13 +110,33 @@ try {
   // --- Bachillerato: nota numérica tecleada
   for (const k of Object.keys(saved)) delete saved[k];
   await call("educa_navigate", { url: url + "cuaderno?bach=1" });
-  const bp = (await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }, { student: "Pérez Martínez, Iñigo", grade: "0" }, { student: "Ruiz Arana, Pablo", grade: "6,5" }], response_format: "json" })).structuredContent as { plan_id: string; summary: Record<string, number> };
+  const bp = (await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }, { student: "Pérez Martínez, Iñigo", grade: "0" }, { student: "Ruiz Arana, Pablo", grade: "6,5" }, { student: "Etxeberria Goñi, Maite", grade: "NT" }], response_format: "json" })).structuredContent as { plan_id: string; summary: Record<string, number>; scale: { kind: string; stage: string; min: number; values: string[] } };
   assert.equal(bp.summary.cambia, 2);
-  assert.equal(bp.summary.nota_no_valida, 1);
+  assert.equal(bp.summary.nota_no_valida, 2, "en Bachillerato no valen ni decimales ni términos");
+  assert.deepEqual([bp.scale.kind, bp.scale.stage, bp.scale.min], ["numerica", "bachillerato", 0]);
+  assert.deepEqual(bp.scale.values, ["FPEX"]);
   await call("educa_fill_grades", { plan_id: bp.plan_id });
   assert.equal(saved["cuaderno"], undefined);
   await call("educa_save_grades", { confirm: true });
   assert.deepEqual(saved["cuaderno"], { "1001": "8", "1002": "0" });
+
+  // --- Formación Profesional: módulos de 1 a 10 (el 0 no existe) y pantallas de Apto / No apto
+  for (const k of Object.keys(saved)) delete saved[k];
+  await call("educa_navigate", { url: url + "cuaderno?fp=1" });
+  const fp = (await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "10" }, { student: "Pérez Martínez, Iñigo", grade: "0" }, { student: "Ruiz Arana, Pablo", grade: "1" }], response_format: "json" })).structuredContent as { plan_id: string; summary: Record<string, number>; scale: { kind: string; stage: string; min: number }; items: { note?: string }[] };
+  assert.deepEqual([fp.scale.kind, fp.scale.stage, fp.scale.min], ["numerica", "fp", 1]);
+  assert.equal(fp.summary.cambia, 2);
+  assert.match(fp.items[1].note ?? "", /1 a 10/);
+  await call("educa_navigate", { url: url + "cuaderno?apto=1" });
+  const ap = (await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "Apto" }, { student: "Pérez Martínez, Iñigo", grade: "7" }, { student: "Ruiz Arana, Pablo", grade: "no apto" }], response_format: "json" })).structuredContent as { plan_id: string; summary: Record<string, number>; scale: { kind: string }; items: { newValue?: string }[] };
+  assert.equal(ap.scale.kind, "apto");
+  assert.equal(ap.summary.cambia, 2);
+  assert.equal(ap.summary.nota_no_valida, 1, "un número no vale donde Educa pide Apto / No apto");
+  assert.deepEqual([ap.items[0].newValue, ap.items[2].newValue], ["APTO", "NO APTO"]);
+  await call("educa_fill_grades", { plan_id: ap.plan_id });
+  assert.equal(saved["cuaderno"], undefined);
+  await call("educa_save_grades", { confirm: true });
+  assert.deepEqual(saved["cuaderno"], { "1001": "APTO", "1006": "NO APTO" });
 
   await call("educa_close_browser");
   console.error("\n✅ Prueba superada");

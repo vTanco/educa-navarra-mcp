@@ -2,6 +2,13 @@
 
 Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 
+## Sin publicar
+
+- Detecta la escala de calificación de cada pantalla en vez de suponerla: términos en ESO y Primaria, número de 0 a 10 en Bachillerato, de 1 a 10 en FP y Apto / No apto donde se pida. Lee las opciones reales del desplegable.
+- Acepta los términos escritos con palabra completa ("Notable") y rechaza términos donde Educa pide número.
+- La vista previa y la lectura de la tabla indican la escala y el grupo detectados.
+- Nuevo resumen de la normativa de evaluación en `docs/normativa-evaluacion.md`.
+
 ## 1.0.0 · 2026-11-12
 
 Primera versión pública.

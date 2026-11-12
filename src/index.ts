@@ -21,7 +21,7 @@ import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 import { EducaBrowser, FieldGone } from "./browser.js";
 import { loadConfig, PROJECT_DIR } from "./config.js";
-import { buildPlan, parseGradesFile, summarizePlan, type GradePlan, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
+import { buildPlan, describeScale, parseGradesFile, summarizePlan, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
 
 const CHARACTER_LIMIT = 25_000;
 const PACKAGE_VERSION: string = (JSON.parse(readFileSync(join(PROJECT_DIR, "package.json"), "utf8")) as { version: string }).version;
@@ -79,7 +79,7 @@ const STATUS_LABEL: Record<PlanItem["status"], string> = {
   duplicada: "⚠️ fila duplicada"
 };
 
-function planMarkdown(stored: StoredPlan, sheet: GradeSheet): string {
+function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale): string {
   const { plan } = stored;
   const counts = summarizePlan(plan);
   const fuzzy = plan.items.filter(i => i.fuzzyMatch && i.status === "cambia").length;
@@ -87,6 +87,8 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet): string {
     `# Vista previa de notas (plan ${stored.id})`,
     "",
     `Columna de Educa: **${stored.column ?? "(única)"}** · ${sheet.rows.filter(r => r.field).length} alumnos en la tabla`,
+    ...(sheet.context ? [`Pantalla: ${sheet.context}`] : []),
+    `Escala detectada: ${scale.description}`,
     "",
     `- Se escribirán: **${counts.cambia}**${fuzzy ? ` (de ellas ${fuzzy} por coincidencia aproximada de nombre, revísalas)` : ""}`,
     `- Ya estaban igual: ${counts.igual}`,
@@ -283,7 +285,7 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
     "educa_read_grade_sheet",
     {
       title: "Leer la tabla de notas",
-      description: `Lee la tabla de calificaciones abierta en Educa: alumnos y nota actual de cada uno. No cambia nada. Si la tabla tiene varias columnas editables (p. ej. nota y observaciones, o varias evaluaciones), indica cuál con column; la respuesta lista las columnas editables.`,
+      description: `Lee la tabla de calificaciones abierta en Educa: alumnos y nota actual de cada uno, y la escala de calificación que pide esa pantalla (términos IN/SU/BI/NT/SB en ESO, número de 0 a 10 en Bachillerato, de 1 a 10 en FP, Apto/No apto...). La escala se deduce de la propia pantalla, no del nombre del grupo. No cambia nada. Si la tabla tiene varias columnas editables (p. ej. nota y observaciones, o varias evaluaciones), indica cuál con column; la respuesta lista las columnas editables.`,
       inputSchema: z.strictObject({
         column: z.string().optional().describe("Parte del texto de la cabecera de la columna de nota, p. ej. 'Final' o '1ª Ev'"),
         response_format: ResponseFormat
@@ -292,8 +294,12 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
     },
     async ({ column, response_format }) => {
       await requireLogin();
-      const sheet = await browser.readGradeSheet(column);
+      const sheet = await browser.readGradeSheet(column, true);
+      const scale = describeScale(sheet, config.grades);
       const data = {
+        context: sheet.context ?? null,
+        stage: scale.stage,
+        scale,
         column: sheet.column,
         editable_columns: sheet.editableColumns,
         students: sheet.rows.map(r => ({ name: r.name, ...(r.studentId ? { id: r.studentId } : {}), grade: r.field ? r.field.valueText || r.field.value : null, editable: r.field ? !r.field.disabled : false }))
@@ -302,7 +308,7 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
       if (!sheet.column) {
         return text(`La tabla tiene varias columnas editables y no sé cuál es la nota: ${sheet.editableColumns.join(" | ")}. Vuelve a llamar con column.`);
       }
-      const lines = [`# Tabla de notas · columna "${sheet.column}" · ${data.students.length} alumnos`, "", "| # | Alumno | Nota actual |", "|---|---|---|"];
+      const lines = [`# Tabla de notas · columna "${sheet.column}" · ${data.students.length} alumnos`, ...(sheet.context ? [`Pantalla: ${sheet.context}`] : []), `Escala detectada: ${scale.description}`, "", "| # | Alumno | Nota actual |", "|---|---|---|"];
       data.students.forEach((s, i) => lines.push(`| ${i + 1} | ${s.name} | ${s.grade || "(vacía)"}${s.editable ? "" : " 🔒"} |`));
       return text(lines.join("\n"));
     }
@@ -332,7 +338,7 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
     "educa_preview_grades",
     {
       title: "Vista previa: cruzar notas con Educa",
-      description: `Cruza las notas (de un fichero o pasadas directamente) con la tabla de calificaciones abierta en Educa y devuelve, sin cambiar nada, qué se escribiría: alumno del fichero, alumno de Educa, nota actual, nota nueva y avisos (alumno no encontrado, nombre dudoso, nota fuera de rango o que no existe en el desplegable, campo bloqueado). Devuelve un plan_id para educa_fill_grades.
+      description: `Cruza las notas (de un fichero o pasadas directamente) con la tabla de calificaciones abierta en Educa y devuelve, sin cambiar nada, qué se escribiría: alumno del fichero, alumno de Educa, nota actual, nota nueva y avisos (alumno no encontrado, nombre dudoso, nota fuera de rango o que no existe en el desplegable, campo bloqueado). Indica también la escala detectada en la pantalla y convierte cada nota a ella: si Educa pide términos (ESO) y el fichero trae números, aplica 0–4 IN, 5 SU, 6 BI, 7–8 NT, 9–10 SB; si pide número (Bachillerato, FP) rechaza los términos y los decimales. Devuelve un plan_id para educa_fill_grades.
 
 Los nombres se emparejan sin importar mayúsculas, tildes ni el orden "Apellidos, Nombre" / "Nombre Apellidos". Las coincidencias aproximadas se marcan y no se escriben salvo que se pida.
 
@@ -348,6 +354,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
         grade_column: z.string().optional(),
         id_column: z.string().optional(),
         column: z.string().optional().describe("Columna de Educa donde va la nota, si hay varias editables"),
+        stage: z.enum(["primaria", "eso", "bachillerato", "fp"]).optional().describe("Etapa del grupo, solo si la detección automática falla (afecta al rango numérico: en FP 1–10, en Bachillerato 0–10)"),
         response_format: ResponseFormat
       }),
       annotations: { readOnlyHint: true, openWorldHint: true }
@@ -360,17 +367,18 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
         inputs = (await parseGradesFile(args.file_path, { sheet: args.sheet, nameColumn: args.name_column, gradeColumn: args.grade_column, idColumn: args.id_column })).grades;
       }
       if (!inputs.length) throw new Error("El fichero no contiene ninguna nota.");
-      const sheet = await browser.readGradeSheet(args.column);
+      const sheet = await browser.readGradeSheet(args.column, true);
       if (!sheet.column && !config.gradeSheet.gradeFieldSelector) {
         throw new Error(`La tabla de Educa tiene varias columnas editables: ${sheet.editableColumns.join(" | ")}. Indica en column cuál es la de la nota.`);
       }
-      const plan = buildPlan(sheet, inputs, config.grades);
+      const plan = buildPlan(sheet, inputs, config.grades, args.stage);
+      const scale = describeScale(sheet, config.grades, args.stage);
       const stored: StoredPlan = { id: randomUUID().slice(0, 8), column: args.column ?? null, createdAt: Date.now(), plan, filled: false };
       plans.set(stored.id, stored);
       if (args.response_format === "json") {
-        return json({ plan_id: stored.id, column: sheet.column, summary: summarizePlan(plan), items: plan.items, rows_without_grade: plan.rowsWithoutGrade });
+        return json({ plan_id: stored.id, column: sheet.column, context: sheet.context ?? null, scale, summary: summarizePlan(plan), items: plan.items, rows_without_grade: plan.rowsWithoutGrade });
       }
-      return text(planMarkdown({ ...stored, column: sheet.column }, sheet));
+      return text(planMarkdown({ ...stored, column: sheet.column }, sheet, scale));
     }
   );
 
@@ -378,13 +386,13 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
     "educa_fill_grades",
     {
       title: "Escribir las notas (sin guardar)",
-      description: `Escribe en los campos de Educa las notas de un plan de educa_preview_grades, solo las marcadas "se escribirá". En pantallas con botón Guardar NO lo pulsa: los cambios quedan en pantalla para que el profesor los revise. En el Cuaderno de aula de Educa-Gestión no hay botón Guardar (cada nota se guarda al elegirla), así que ahí exige confirm_autosave=true. Comprueba antes que la tabla sigue siendo la misma (mismos alumnos) y después relee cada campo.
+      description: `Escribe en los campos de Educa las notas de un plan de educa_preview_grades, solo las marcadas "se escribirá". NO guarda: los cambios quedan en pantalla para que el profesor los revise (en el Cuaderno de aula de Educa-Gestión aparecen los botones Aceptar/Cancelar; se guarda después con educa_save_grades). Comprueba antes que la tabla sigue siendo la misma (mismos alumnos) y después relee cada campo.
 
 Úsala solo después de que el profesor haya visto la vista previa y dado el visto bueno.`,
       inputSchema: z.strictObject({
         plan_id: z.string().describe("plan_id devuelto por educa_preview_grades"),
         include_fuzzy: z.boolean().default(false).describe("Escribir también las filas emparejadas por nombre aproximado (solo si el profesor las ha confirmado)"),
-        confirm_autosave: z.boolean().default(false).describe("Obligatorio (true) cuando la pantalla guarda cada nota al elegirla, como el Cuaderno de aula de Educa-Gestión: confirma que el profesor ha autorizado que las notas queden guardadas")
+        confirm_autosave: z.boolean().default(false).describe("Solo hace falta (true) en pantallas que guardan cada nota al elegirla, si alguna lo hiciera: confirma que el profesor ha autorizado que las notas queden guardadas")
       }),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
     },
