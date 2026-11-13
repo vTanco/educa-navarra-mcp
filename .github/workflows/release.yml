@@ -1,9 +1,11 @@
 name: Publicar versión
 
-# Se lanza al subir una etiqueta vX.Y.Z (ver docs/PUBLICAR.md).
+# Se lanza al subir una etiqueta vX.Y.Z, o a mano desde la pestaña Actions
+# ("Run workflow"), que crea la etiqueta con la versión de package.json.
 on:
   push:
     tags: ["v*.*.*"]
+  workflow_dispatch:
 
 permissions:
   contents: write # crear la versión en GitHub con el .mcpb
@@ -19,10 +21,14 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
-      - name: Comprobar que la etiqueta coincide con package.json
+      - name: Versión y etiqueta
+        id: version
         run: |
           v="$(node -p "require('./package.json').version")"
-          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "La etiqueta $GITHUB_REF_NAME no coincide con la versión $v de package.json"; exit 1; }
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$v" != "$GITHUB_REF_NAME" ]; then
+            echo "La etiqueta $GITHUB_REF_NAME no coincide con la versión $v de package.json"; exit 1
+          fi
       - run: npm ci
       - run: npm run build
       - run: npm test
@@ -33,8 +39,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" build/educa-navarra-mcp.mcpb \
-            --title "$GITHUB_REF_NAME" --notes "Descarga **educa-navarra-mcp.mcpb** y haz doble clic para instalarlo en Claude Desktop. Cambios: ver CHANGELOG.md."
+          gh release create "${{ steps.version.outputs.tag }}" build/educa-navarra-mcp.mcpb --target "$GITHUB_SHA" \
+            --title "${{ steps.version.outputs.tag }}" --notes "Descarga **educa-navarra-mcp.mcpb** y haz doble clic para instalarlo en Claude Desktop. Cambios: ver CHANGELOG.md."
       - name: Publicar en npm
         run: |
           npm install -g npm@latest
