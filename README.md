@@ -12,7 +12,7 @@ Tú revisas y decides cuándo se guardan.
 [![Pruebas](https://github.com/vTanco/educa-navarra-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/vTanco/educa-navarra-mcp/actions/workflows/ci.yml)
 ![Mac · Windows · Linux](https://img.shields.io/badge/Mac%20·%20Windows%20·%20Linux-grey)
 
-[**⬇️ Descargar para Claude Desktop**](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb) · [Cómo se usa](#-cómo-se-usa) · [Preguntas frecuentes](#-preguntas-frecuentes) · [Aviso legal](AVISO-LEGAL.md)
+[**⬇️ Descargar para Claude Desktop**](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb) · [Cómo se usa](#-cómo-se-usa) · [Prepara tus Excel](docs/BUENAS-PRACTICAS.md) · [Preguntas frecuentes](#-preguntas-frecuentes) · [Aviso legal](AVISO-LEGAL.md)
 
 </div>
 
@@ -42,6 +42,7 @@ Pensado para **ESO** (IN · SU · BI · NT · SB), **Bachillerato** (nota sobre 
 2. **[Descarga `educa-navarra-mcp.mcpb`](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)**.
 3. Haz **doble clic** en el fichero descargado. Claude Desktop se abre y te pregunta si quieres instalarlo: pulsa **Instalar**.
 4. Te pedirá tu **usuario y contraseña de Educa**. Son **opcionales**: si los pones, Claude entra solo en Educa; si los dejas vacíos, entras tú en la ventana que se abre. La contraseña se guarda cifrada en tu ordenador.
+5. Te preguntará también por tu **carpeta de notas**. Deja la que sale (*Documentos/Notas Educa*) y créala si no la tienes: ahí guardarás tus Excel.
 
 Y ya está. No hace falta instalar nada más: usa el **Google Chrome** o **Microsoft Edge** que ya tienes. Si no tienes ninguno, descarga un navegador la primera vez (tarda un par de minutos).
 
@@ -85,7 +86,17 @@ No compartas ese fichero ni lo subas a ningún sitio. También vale poner las va
 
 Escríbele a Claude con tus palabras. Por ejemplo:
 
-> *Mete las notas de la 1ª evaluación de 1º de Bachillerato A, TIC, desde el Excel `notas_1BA.xlsx` de mi Escritorio.*
+| Quieres… | Dile… |
+|---|---|
+| Meter notas | *"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC."* |
+| Ver qué ficheros tienes | *"¿Qué ficheros de notas tengo?"* |
+| Consultar sin tocar | *"Enséñame las notas que hay ahora en Educa de ESO 3ºDEFH, Matemáticas. No cambies nada."* |
+| Escribir tras la vista previa | *"Vale, escríbelas."* |
+| Guardar tras revisar en pantalla | *"Guarda."* |
+| Usar otra columna | *"La nota está en la columna Media T1."* |
+| Aprender a preparar el Excel | *"¿Cómo preparo mi Excel de notas?"* |
+
+En Claude Desktop tienes además atajos en el menú **+** del chat: **Meter notas en Educa**, **Revisar mis notas en Educa** y **Cómo preparo mi Excel de notas**.
 
 ```mermaid
 flowchart LR
@@ -115,6 +126,9 @@ El conector no supone cómo se califica: lee la pantalla de Educa abierta y se a
 La vista previa dice siempre qué escala ha detectado y nunca redondea decimales. Las pantallas de FP solo se han probado con el simulador. Normativa de referencia en [docs/normativa-evaluacion.md](docs/normativa-evaluacion.md).
 
 ### Tu fichero de notas
+
+> [!TIP]
+> Guarda tus Excel en **Documentos/Notas Educa** con nombres como `1EV_BTO-1A_TIC.xlsx` (evaluación_grupo_materia) y Claude los encontrará solo. Todos los consejos en la **[guía de buenas prácticas](docs/BUENAS-PRACTICAS.md)**.
 
 Vale casi cualquier Excel o CSV con una fila por alumno. Por ejemplo:
 
