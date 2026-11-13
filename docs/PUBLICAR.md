@@ -8,7 +8,8 @@
    npm version patch   # 1.0.0 -> 1.0.1 (minor para novedades, major para cambios incompatibles)
    git push --follow-tags
    ```
-3. GitHub Actions (`.github/workflows/release.yml`) pasa las pruebas, crea la versión en GitHub con el fichero `educa-navarra-mcp.mcpb` adjunto y publica en npm.
+3. GitHub Actions (`.github/workflows/release.yml`) pasa las pruebas, crea la versión en GitHub con el fichero `educa-navarra-mcp.mcpb` adjunto y envía la versión a npm.
+4. Si npm la deja **en espera** (staged publishing), apruébala en npmjs.com → pestaña **Staged Packages** → **Approve** (pide el segundo factor). Hasta entonces `npx` sigue instalando la versión anterior.
 
 El enlace de descarga del README (`releases/latest/download/educa-navarra-mcp.mcpb`) apunta siempre a la última versión.
 
@@ -27,6 +28,8 @@ npm login          # abre el navegador
 npm ci && npm run build && npm test
 npm publish --access public
 ```
+
+npm deja la primera versión en espera y crea un paquete provisional `0.0.0-stage`. Apruébala en npmjs.com → **Staged Packages** → **Approve**.
 
 ## Probar el paquete de Claude Desktop sin publicar
 
