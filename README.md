@@ -100,6 +100,20 @@ flowchart LR
 
 Verás una ventana del navegador donde ocurre todo: puedes mirar en cualquier momento qué está haciendo. **El cierre y la firma de la evaluación los haces tú a mano**, como siempre.
 
+### Sirve para cualquier etapa
+
+El conector no supone cómo se califica: lee la pantalla de Educa abierta y se adapta. Vale igual si este curso das ESO y el siguiente un ciclo formativo.
+
+| Lo que ofrece Educa | Qué acepta de tu fichero |
+|---|---|
+| Desplegable con términos (ESO, Primaria): IN, SU, BI, NT, SB | El término ("NT", "Notable") o un número entero, que convierte así: 0–4 IN, 5 SU, 6 BI, 7–8 NT, 9–10 SB |
+| Nota tecleada (Bachillerato) | Entero de 0 a 10 |
+| Nota tecleada en un ciclo formativo (FP) | Entero de 1 a 10 |
+| Desplegable Apto / No apto | El término; rechaza números |
+| Otros valores (FPEX, EX, NP...) | Solo si la pantalla los ofrece |
+
+La vista previa dice siempre qué escala ha detectado y nunca redondea decimales. Las pantallas de FP solo se han probado con el simulador. Normativa de referencia en [docs/normativa-evaluacion.md](docs/normativa-evaluacion.md).
+
 ### Tu fichero de notas
 
 Vale casi cualquier Excel o CSV con una fila por alumno. Por ejemplo:

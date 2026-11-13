@@ -64,13 +64,18 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
     if (url.pathname === "/cuaderno") {
       // Imita el Cuaderno de aula de Educa-Gestión: tarjetas por alumno, desplegables PrimeNG y guardado automático
       const cur = saved["cuaderno"] ?? {};
+      // Variantes: ?bach=1 (Bachillerato, nota tecleada), ?fp=1 (ciclo formativo, nota tecleada 1-10), ?apto=1 (Apto / No apto)
+      const typed = url.searchParams.get("bach") || url.searchParams.get("fp");
+      const grupo = url.searchParams.get("fp") ? "CFGM 1º SMR" : url.searchParams.get("bach") ? "BTO N 1ºA" : url.searchParams.get("apto") ? "CFGS 2º DAM" : "ESO 1ºAB plu";
+      const materia = url.searchParams.get("fp") ? "Redes locales" : url.searchParams.get("apto") ? "Formación en empresa" : "Tecnología";
+      const opciones = typed ? ["FPEX"] : url.searchParams.get("apto") ? ["APTO", "NO APTO", "EX"] : ["SB", "NT", "BI", "SU", "IN", "FPEX"];
       const cards = STUDENTS.map(s => {
         const [ap, nom] = s.name.split(", ");
         const v = cur[s.id] ?? "";
         const cell = s.locked
           ? `<app-ver-calificacion><span class="spanCalificacion">FPEX</span></app-ver-calificacion>`
-          : url.searchParams.get("bach")
-          ? `<p-select class="p-select" data-id="${s.id}"><input type="text" class="p-select-label" value="${v}" onchange="pend('${s.id}', this.value)"><div class="p-select-dropdown"></div></p-select>`
+          : typed
+          ? `<p-select class="p-select" data-id="${s.id}"><input type="text" class="p-select-label" value="${v}" onchange="pend('${s.id}', this.value)"><div class="p-select-dropdown" style="display:inline-block;width:16px;height:16px"></div></p-select>`
           : `<p-select placeholder="Sin calificar" class="p-select" data-id="${s.id}"><span role="combobox" class="p-select-label${v ? "" : " p-placeholder"}">${v || "Sin calificar"}</span></p-select>`;
         return `<div class="elementoLista"><div class="infoAlumno" id="id-${s.id}"><a class="enlaceNombre"><span class="nombreTabla">${ap} <span>,</span> <span class="nombre">${nom}</span></span></a></div>
           <app-calificacion-evaluaciones><table><thead><tr><th><span>Ev. In.</span></th><th><span>1Ev</span></th><th><span>2Ev</span></th></tr></thead>
@@ -78,7 +83,8 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
           <h4>Observaciones</h4><textarea></textarea></div>`;
       }).join("");
       return send(page("EducaGestion", `<div id="usuario-conectado">Profe Demo</div><h3>Calificaciones de evaluación: Asignatura</h3>
-        <app-leyenda-calificaciones><ul>${["SB", "NT", "BI", "SU", "IN", "FPEX"].map(c => `<li><span>${c}</span><span>= x</span></li>`).join("")}</ul></app-leyenda-calificaciones>
+        <app-selector-grupo-asignatura-anidado><div class="noPopUp"><p-select placeholder="Seleccione un grupo"><span role="combobox">${grupo}</span></p-select><ul role="listbox"><li role="option" aria-selected="true">${materia}</li><li role="option" aria-selected="false">Otra materia</li></ul></div></app-selector-grupo-asignatura-anidado>
+        <app-leyenda-calificaciones><ul>${(typed ? ["FPEX"] : ["SB", "NT", "BI", "SU", "IN", "FPEX"]).map(c => `<li><span>${c}</span><span>= x</span></li>`).join("")}</ul></app-leyenda-calificaciones>
         <div class="listadoCalificaciones">${cards}</div>
         <div id="botones"></div>
         <script>
@@ -91,14 +97,16 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
               document.getElementById("botones").innerHTML = '<div class="mensaje">Datos guardados correctamente</div>';
             };
           }
-          document.querySelectorAll("p-select").forEach(ps => ps.querySelector("input") || ps.addEventListener("click", ev => {
+          const OPCIONES = ${JSON.stringify(opciones)};
+          document.addEventListener("keydown", ev => ev.key === "Escape" && document.querySelectorAll(".p-select-overlay").forEach(o => o.remove()));
+          document.querySelectorAll(".listadoCalificaciones p-select").forEach(ps => (ps.querySelector(".p-select-dropdown") || ps).addEventListener("click", ev => {
             ev.stopPropagation();
             document.querySelectorAll(".p-select-overlay").forEach(o => o.remove());
             const ov = document.createElement("div"); ov.className = "p-select-overlay";
-            ov.innerHTML = '<ul role="listbox">' + ["SB","NT","BI","SU","IN","FPEX"].map(c => '<li role="option" aria-label="'+c+'"><span>'+c+'</span></li>').join("") + '</ul>';
+            ov.innerHTML = '<ul role="listbox">' + OPCIONES.map(c => '<li role="option" aria-label="'+c+'"><span>'+c+'</span></li>').join("") + '</ul>';
             document.body.appendChild(ov);
             ov.querySelectorAll("li").forEach(li => li.addEventListener("click", () => {
-              const lab = ps.querySelector("[role=combobox]"); lab.textContent = li.textContent; lab.classList.remove("p-placeholder");
+              const lab = ps.querySelector("[role=combobox]"); if (lab) { lab.textContent = li.textContent; lab.classList.remove("p-placeholder"); } else ps.querySelector("input").value = li.textContent;
               pend(ps.dataset.id, li.textContent);
               ov.remove();
             }));

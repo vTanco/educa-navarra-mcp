@@ -24,7 +24,11 @@ export interface SheetField {
   /** Texto visible del valor actual (para <select>, el texto de la opción). */
   valueText: string;
   disabled: boolean;
+  /** Opciones del desplegable. En un campo tecleado: valores no numéricos que ofrece además (p. ej. FPEX). */
   options?: FieldOption[];
+  /** Límites que declara el propio campo (input type=number min/max), si los hay. */
+  min?: number;
+  max?: number;
 }
 
 export interface SheetRow {
@@ -43,6 +47,8 @@ export interface GradeSheet {
   editableColumns: string[];
   /** true si la pantalla guarda cada nota al elegirla (no hay botón Guardar), como en Educa-Gestión. */
   autoSaves?: boolean;
+  /** Texto de la pantalla que identifica grupo y materia (para deducir la etapa). */
+  context?: string;
 }
 
 export interface InputGrade {
@@ -233,6 +239,109 @@ export function parseCsv(text: string): string[][] {
   return rows;
 }
 
+// ---------- Etapa y escala de calificación ----------
+// La escala no se supone: se deduce de lo que ofrece la pantalla de Educa (opciones del
+// desplegable o campo tecleado). La etapa solo se usa para afinar el rango numérico.
+// Referencia normativa: docs/normativa-evaluacion.md
+
+export type Stage = "primaria" | "eso" | "bachillerato" | "fp" | "desconocida";
+
+export function detectStage(context: string | undefined): Stage {
+  const t = ` ${normalize(context ?? "")} `;
+  if (/ (bto|bach|bachiller|bachillerato) /.test(t)) return "bachillerato";
+  if (/ (cfgm|cfgs|cfgb|fpb|fpgb|gm|gs|fp|ciclo formativo|ciclos formativos|grado medio|grado superior|grado basico|curso de especializacion) /.test(t)) return "fp";
+  if (/ (eso|secundaria obligatoria) /.test(t)) return "eso";
+  if (/ (ep|primaria) /.test(t)) return "primaria";
+  return "desconocida";
+}
+
+/** Términos de calificación con sus formas habituales (código y palabra completa). */
+const TERMS: Record<string, string[]> = {
+  IN: ["in", "insuficiente"],
+  SU: ["su", "sf", "suficiente"],
+  BI: ["bi", "bien"],
+  NT: ["nt", "notable"],
+  SB: ["sb", "sobresaliente"],
+  AP: ["ap", "apto", "apta", "superado", "superada"],
+  NA: ["na", "no apto", "no apta", "no superado", "no superada"],
+  NP: ["np", "no presentado", "no presentada"],
+  EX: ["ex", "exento", "exenta"],
+  CV: ["cv", "convalidado", "convalidada"]
+};
+const ESO_TERMS = ["IN", "SU", "BI", "NT", "SB"];
+
+/** Código canónico de un término ("Sobresaliente", "SB", "Sobresaliente (SB)" -> "SB"), o null. */
+export function termCode(text: string): string | null {
+  const candidates = [text, text.replace(/\s*\([^)]*\)\s*$/, ""), /\(([^)]*)\)\s*$/.exec(text)?.[1] ?? ""].map(normalize).filter(Boolean);
+  for (const [code, forms] of Object.entries(TERMS)) if (candidates.some(c => forms.includes(c))) return code;
+  return null;
+}
+
+export interface GradeScale {
+  kind: "terminos" | "apto" | "numerica" | "otra" | "sin_campos";
+  stage: Stage;
+  /** Frase para enseñar al profesor. */
+  description: string;
+  /** Valores que admite el campo (desplegable) o valores no numéricos extra (campo tecleado). */
+  values?: string[];
+  min?: number;
+  max?: number;
+  /** Equivalencia aplicada cuando el fichero trae números y Educa pide términos. */
+  conversion?: string;
+}
+
+const STAGE_LABEL: Record<Stage, string> = { primaria: "Primaria", eso: "ESO", bachillerato: "Bachillerato", fp: "Formación Profesional", desconocida: "etapa no identificada" };
+const ESO_CONVERSION = "0–4 → IN · 5 → SU · 6 → BI · 7–8 → NT · 9–10 → SB";
+
+function numericRange(field: SheetField, cfg: EducaConfig["grades"], stage: Stage): { lo: number; hi: number } {
+  // RD 659/2023: los módulos de FP se califican de 1 a 10; en Bachillerato (RD 243/2022) de 0 a 10
+  const lo = field.min ?? (stage === "fp" ? Math.max(cfg.min, 1) : cfg.min);
+  return { lo, hi: field.max ?? cfg.max };
+}
+
+function realOptions(field: SheetField): FieldOption[] {
+  return (field.options ?? []).filter(o => o.value.trim() !== "" || o.text.trim() !== "");
+}
+
+function findTerm(options: FieldOption[], code: string): FieldOption | null {
+  const hits = options.filter(o => termCode(o.text) === code || termCode(o.value) === code);
+  return hits.length === 1 ? hits[0] : null;
+}
+
+/** Describe la escala que pide la pantalla abierta, a partir de sus campos de nota. */
+export function describeScale(sheet: GradeSheet, cfg: EducaConfig["grades"], stageOverride?: Stage): GradeScale {
+  const stage = stageOverride ?? detectStage(sheet.context);
+  const fields = sheet.rows.map(r => r.field).filter((f): f is SheetField => f !== null);
+  const field = fields.find(f => !f.disabled) ?? fields[0];
+  const where = STAGE_LABEL[stage];
+  if (!field) return { kind: "sin_campos", stage, description: `No hay campos de nota en la columna elegida (${where}).` };
+
+  if (field.tag === "select" || field.tag === "pselect") {
+    const options = realOptions(field);
+    const values = options.map(o => o.text || o.value);
+    if (!options.length) return { kind: "otra", stage, values, description: `Desplegable sin opciones legibles (${where}); puede que la evaluación esté cerrada.` };
+    if (ESO_TERMS.every(c => findTerm(options, c))) {
+      return { kind: "terminos", stage, values, conversion: ESO_CONVERSION, description: `Términos (${where}): ${values.join(", ")}. Si el fichero trae números se convierten así: ${ESO_CONVERSION}.` };
+    }
+    if (findTerm(options, "AP") && findTerm(options, "NA")) {
+      return { kind: "apto", stage, values, description: `Apto / No apto (${where}): ${values.join(", ")}. El fichero debe traer el término, no un número.` };
+    }
+    const nums = options.map(o => { const n = numbersIn(o.text); return n.length === 1 ? n[0] : parseNumber(o.value); }).filter((n): n is number => n !== null);
+    if (nums.length >= options.length / 2 && nums.length >= 5) {
+      return { kind: "numerica", stage, values, min: Math.min(...nums), max: Math.max(...nums), description: `Nota numérica elegida en un desplegable, de ${Math.min(...nums)} a ${Math.max(...nums)} (${where}). Opciones: ${values.join(", ")}.` };
+    }
+    return { kind: "otra", stage, values, description: `Desplegable con estas opciones (${where}): ${values.join(", ")}. El fichero debe traer exactamente uno de esos valores.` };
+  }
+
+  const { lo, hi } = numericRange(field, cfg, stage);
+  const extras = field.options ? realOptions(field).map(o => o.text || o.value) : ["FPEX"];
+  const all = [...new Set([...extras, ...cfg.extraValues])];
+  return {
+    kind: "numerica", stage, min: lo, max: hi, values: all,
+    description: `Nota numérica tecleada de ${lo} a ${hi}${cfg.integerOnly ? ", sin decimales" : ""} (${where})${all.length ? `. También admite: ${all.join(", ")}` : ""}.`
+  };
+}
+
 // ---------- Conversión de la nota al valor del campo ----------
 
 export type GradeResolution = { ok: true; value: string; display: string } | { ok: false; reason: string };
@@ -246,17 +355,19 @@ function numbersIn(text: string): number[] {
   return (text.match(/\d+(?:[.,]\d+)?/g) ?? []).map(n => Number(n.replace(",", ".")));
 }
 
-export function resolveGrade(field: SheetField, grade: string, cfg: EducaConfig["grades"]): GradeResolution {
+export function resolveGrade(field: SheetField, grade: string, cfg: EducaConfig["grades"], stage: Stage = "desconocida"): GradeResolution {
   const raw = grade.trim();
   const n = parseNumber(raw);
+  const isChoice = field.tag === "select" || field.tag === "pselect";
+  const { lo, hi } = isChoice ? { lo: Math.min(cfg.min, 0), hi: cfg.max } : numericRange(field, cfg, stage);
 
   if (n !== null) {
-    if (n < cfg.min || n > cfg.max) return { ok: false, reason: `la nota ${raw} está fuera del rango ${cfg.min}–${cfg.max}` };
+    if (n < lo || n > hi) return { ok: false, reason: `la nota ${raw} está fuera del rango ${lo}–${hi}${stage === "fp" && n === 0 ? " (en FP los módulos se califican de 1 a 10)" : ""}` };
     if (cfg.integerOnly && !Number.isInteger(n)) return { ok: false, reason: `la nota ${raw} tiene decimales y Educa espera una nota entera; redondéala tú en el fichero` };
   }
 
-  if (field.tag === "select" || field.tag === "pselect") {
-    const options = (field.options ?? []).filter(o => o.value.trim() !== "" || o.text.trim() !== "");
+  if (isChoice) {
+    const options = realOptions(field);
     const byValue = options.filter(o => o.value.trim() === raw);
     if (byValue.length === 1) return { ok: true, value: byValue[0].value, display: byValue[0].text };
     const byText = options.filter(o => normalize(o.text) === normalize(raw));
@@ -269,19 +380,22 @@ export function resolveGrade(field: SheetField, grade: string, cfg: EducaConfig[
       });
       if (byNumber.length === 1) return { ok: true, value: byNumber[0].value, display: byNumber[0].text };
       if (byNumber.length > 1) return { ok: false, reason: `la nota ${raw} encaja con varias opciones (${byNumber.map(o => o.text).join(" / ")})` };
-    } else {
-      const byPrefix = options.filter(o => normalize(o.text).startsWith(normalize(raw)));
-      if (byPrefix.length === 1) return { ok: true, value: byPrefix[0].value, display: byPrefix[0].text };
-    }
-    // Calificaciones cualitativas (ESO LOMLOE): IN / SU / BI / NT / SB
-    if (n !== null) {
-      const has = (code: string) => options.find(o => normalize(o.text) === code.toLowerCase());
-      if (has("IN") && has("SU") && has("BI") && has("NT") && has("SB")) {
+      // El fichero trae un número y Educa pide términos (ESO, Primaria, ámbitos): equivalencia habitual
+      if (ESO_TERMS.every(c => findTerm(options, c))) {
         if (!Number.isInteger(n)) return { ok: false, reason: `la nota ${raw} tiene decimales; redondéala tú en el fichero o pon directamente IN/SU/BI/NT/SB` };
-        const code = n <= 4 ? "IN" : n === 5 ? "SU" : n === 6 ? "BI" : n <= 8 ? "NT" : "SB";
-        const o = has(code)!;
+        const o = findTerm(options, n <= 4 ? "IN" : n === 5 ? "SU" : n === 6 ? "BI" : n <= 8 ? "NT" : "SB")!;
         return { ok: true, value: o.value, display: `${o.text} (${raw})` };
       }
+      if (findTerm(options, "AP") && findTerm(options, "NA")) {
+        return { ok: false, reason: `esta pantalla califica con ${options.map(o => o.text).join(" / ")}, no con números; pon el término en el fichero` };
+      }
+    } else {
+      // "Sobresaliente" -> SB, "Apto" -> AP...
+      const code = termCode(raw);
+      const byTerm = code ? findTerm(options, code) : null;
+      if (byTerm) return { ok: true, value: byTerm.value, display: byTerm.text };
+      const byPrefix = options.filter(o => normalize(o.text).startsWith(normalize(raw)));
+      if (byPrefix.length === 1) return { ok: true, value: byPrefix[0].value, display: byPrefix[0].text };
     }
     return { ok: false, reason: `"${raw}" no corresponde a ninguna opción del desplegable (${options.map(o => o.text).slice(0, 15).join(" / ")})` };
   }
@@ -290,9 +404,14 @@ export function resolveGrade(field: SheetField, grade: string, cfg: EducaConfig[
     const text = String(n).replace(".", cfg.decimalSeparator);
     return { ok: true, value: text, display: text };
   }
-  const extra = [...cfg.extraValues, "FPEX"].find(v => normalize(v) === normalize(raw));
+  // Campo tecleado con un valor no numérico: solo los que ofrece el propio campo o la configuración
+  const offered = field.options ? realOptions(field).map(o => o.text || o.value) : ["FPEX"];
+  const extra = [...offered, ...cfg.extraValues].find(v => normalize(v) === normalize(raw) || (termCode(v) !== null && termCode(v) === termCode(raw)));
   if (extra) return { ok: true, value: extra, display: extra };
-  return { ok: false, reason: `"${raw}" no es una nota numérica ni está en grades.extraValues` };
+  if (termCode(raw) && ESO_TERMS.includes(termCode(raw)!)) {
+    return { ok: false, reason: `esta pantalla pide una nota numérica de ${lo} a ${hi}, no un término como "${raw}"; pon el número en el fichero` };
+  }
+  return { ok: false, reason: `"${raw}" no es una nota numérica de ${lo} a ${hi}${offered.length ? ` ni uno de los valores que admite el campo (${[...offered, ...cfg.extraValues].join(", ")})` : ""}` };
 }
 
 // ---------- Emparejar alumnos y preparar el plan ----------
@@ -319,7 +438,8 @@ export interface GradePlan {
   rowsWithoutGrade: string[];
 }
 
-export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaConfig["grades"]): GradePlan {
+export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaConfig["grades"], stageOverride?: Stage): GradePlan {
+  const stage = stageOverride ?? detectStage(sheet.context);
   const rows = sheet.rows.filter(r => r.field);
   const used = new Map<number, number>(); // rowIndex -> item index
   const items: PlanItem[] = [];
@@ -371,7 +491,7 @@ export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaCon
         item.note = "el campo está deshabilitado en Educa (¿evaluación cerrada?)";
       } else {
         used.set(match.index, items.length);
-        const res = resolveGrade(match.field, input.grade, cfg);
+        const res = resolveGrade(match.field, input.grade, cfg, stage);
         if (!res.ok) {
           item.status = "nota_no_valida";
           item.note = res.reason;
