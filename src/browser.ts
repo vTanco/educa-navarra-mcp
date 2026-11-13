@@ -256,11 +256,13 @@ export class EducaBrowser {
       if (!found) continue;
       await frame.locator("[data-educa-mcp-dd]").first().click();
       await page.waitForTimeout(600);
-      const searchBox = frame.locator("[data-educa-mcp-dd] input, .p-dropdown-filter, .ng-select input, input[role=searchbox], input[type=search]").filter({ visible: true }).first();
-      if ((await searchBox.count()) > 0) await searchBox.fill(option).catch(() => undefined);
+      // Buscador del propio desplegable (o de su panel abierto); nunca otros buscadores de la página
+      const searchBox = frame.locator("[data-educa-mcp-dd] input, .p-select-overlay input, .p-dropdown-panel input, .ng-dropdown-panel input").filter({ visible: true }).first();
+      const typed = (await searchBox.count()) > 0 && (await searchBox.fill(option).then(() => true).catch(() => false));
       await page.waitForTimeout(600);
       const picked = await frame.evaluate(clickDropdownOption, option);
       if (!picked.ok) {
+        if (typed) await searchBox.fill("").catch(() => undefined); // no dejar el filtro escrito
         await page.keyboard.press("Escape").catch(() => undefined);
         throw new Error(`El desplegable "${fieldHint}" no tiene la opción "${option}". Opciones visibles: ${picked.options.join(" / ") || "(ninguna)"}`);
       }
