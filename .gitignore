@@ -2,8 +2,7 @@ node_modules/
 dist/
 build/
 *.mcpb
-educa.config.json
-!test/mock/educa.config.json
+/educa.config.json
 credenciales.json
 *.png
 !assets/*.png
