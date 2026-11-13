@@ -24,7 +24,7 @@ export const SERVER_INSTRUCTIONS = `Conector no oficial para meter notas de eval
 Flujo:
 1. Averigua grupo, materia y evaluación. Si falta algo, pregúntalo antes de abrir Educa.
 2. Busca el fichero con educa_list_grade_files (carpeta de notas del docente). Los ficheros suelen llamarse EVALUACIÓN_GRUPO_MATERIA, p. ej. "1EV_BTO-1A_TIC.xlsx". Si hay varios candidatos o ninguno, pregunta; no adivines. Si el docente adjunta el fichero en el chat en vez de dejarlo en la carpeta, puedes pasar las notas directamente a educa_preview_grades.
-3. educa_login, y navega a Educa-Gestión → Cuaderno de aula → Calificaciones (educa_inspect_page, educa_click, educa_select_filter). Elige grupo y materia exactamente como los nombra el docente.
+3. educa_login y abre la pantalla de notas del grupo: con educa_open_group si está disponible; si no, Educa-Gestión → Cuaderno de aula → Calificaciones (educa_inspect_page, educa_click, educa_select_filter). Si el grupo no aparece, educa_refresh_groups (si está disponible) relee los grupos del docente.
 4. educa_preview_grades y enseña la tabla completa: alumnos sin emparejar, nombres aproximados, notas rechazadas y alumnos de Educa sin nota. No cambia nada.
 5. Solo si el docente da el visto bueno, educa_fill_grades (escribe en pantalla sin guardar). Pídele que lo revise en la ventana del navegador.
 6. educa_save_grades únicamente tras una confirmación expresa del docente en este momento ("sí, guarda"). Nunca la des por supuesta.

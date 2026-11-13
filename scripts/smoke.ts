@@ -30,7 +30,8 @@ await client.connect(
       EDUCA_BROWSER_CHANNEL: process.env.EDUCA_BROWSER_CHANNEL ?? "chromium",
       EDUCA_CREDENTIALS_FILE: credentials,
       EDUCA_CONFIG: resolve("test/mock/educa.config.json"),
-      EDUCA_MCP_HOME: home
+      EDUCA_MCP_HOME: home,
+      EDUCA_NOTES_DIR: resolve("test/mock")
     },
     stderr: "inherit"
   })
@@ -47,7 +48,11 @@ async function call(name: string, args: Record<string, unknown> = {}, expectErro
 
 try {
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 14);
+  assert.equal(tools.length, 15);
+  const { prompts } = await client.listPrompts();
+  assert.deepEqual(prompts.map(p => p.name).sort(), ["meter_notas", "preparar_excel", "revisar_notas"]);
+  assert.match(client.getInstructions() ?? "", /educa_save_grades/);
+  assert.match(textOf(await call("educa_list_grade_files", { filter: "notas" })), /notas\.csv/);
 
   await call("educa_inspect_page", {}, true); // sin login
   const bad = await call("educa_login", { wait_minutes: 0.5 }, true); // contraseña incorrecta: un solo intento
