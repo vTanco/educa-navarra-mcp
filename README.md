@@ -41,7 +41,7 @@ Pensado para **ESO** (IN · SU · BI · NT · SB), **Bachillerato** (nota sobre 
 1. Instala [Claude Desktop](https://claude.ai/download) si no lo tienes.
 2. **[Descarga `educa-navarra-mcp.mcpb`](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)**.
 3. Haz **doble clic** en el fichero descargado. Claude Desktop se abre y te pregunta si quieres instalarlo: pulsa **Instalar**.
-4. Te pedirá tu **usuario y contraseña de Educa**. Son **opcionales**: si los pones, Claude entra solo en Educa; si los dejas vacíos, entras tú en la ventana que se abre. La contraseña se guarda cifrada en tu ordenador.
+4. Te pedirá tu **usuario y contraseña de Educa**. Son **opcionales**: si los pones, Claude entra solo en Educa; si los dejas vacíos, entras tú en la ventana que se abre. La contraseña se guarda cifrada en tu ordenador. También puedes indicar los **grupos en los que no pones notas** (por ejemplo, si compartes docencia): el conector se negará a escribir en ellos.
 
 Y ya está. No hace falta instalar nada más: usa el **Google Chrome** o **Microsoft Edge** que ya tienes. Si no tienes ninguno, descarga un navegador la primera vez (tarda un par de minutos).
 
@@ -99,6 +99,12 @@ flowchart LR
 ```
 
 Verás una ventana del navegador donde ocurre todo: puedes mirar en cualquier momento qué está haciendo. **El cierre y la firma de la evaluación los haces tú a mano**, como siempre.
+
+### Tus grupos
+
+No hay que configurar los grupos: el conector los lee de Educa. Di *"actualiza mis grupos"* y guardará en tu ordenador la lista de grupos, agrupamientos, asignaturas y evaluaciones; a partir de ahí basta con *"abre las notas de 1ºAB de Tecnología, 2ª evaluación"*. Repítelo cuando cambien tus grupos (curso nuevo, sustitución).
+
+Si en algún grupo no pones tú las notas (docencia compartida), indícalo en el ajuste **Grupos en los que no pongo notas**: podrás consultarlo, pero el conector se negará a escribir en él.
 
 ### Sirve para cualquier etapa
 

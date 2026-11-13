@@ -8,6 +8,8 @@ Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 - Acepta los términos escritos con palabra completa ("Notable") y rechaza términos donde Educa pide número.
 - La vista previa y la lectura de la tabla indican la escala y el grupo detectados.
 - `educa_select_filter` ya no escribe en buscadores ajenos al desplegable ni deja el filtro escrito cuando la opción no existe.
+- Nuevas herramientas `educa_refresh_groups` ("actualiza mis grupos") y `educa_open_group` ("abre las notas de 1ºAB de Tecnología, 2ª evaluación"): la lista de grupos se lee de Educa y se guarda en el ordenador.
+- Nuevo ajuste opcional "Grupos en los que no pongo notas": el conector se niega a preparar, escribir o guardar notas en esos grupos.
 - Nuevo resumen de la normativa de evaluación en `docs/normativa-evaluacion.md`.
 
 ## 1.0.0 · 2026-11-12

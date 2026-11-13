@@ -4,7 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import ExcelJS from "exceljs";
-import { buildPlan, describeScale, detectStage, parseCsv, parseGradesFile, resolveGrade, termCode, type GradeSheet, type SheetField } from "../src/grades.js";
+import { blockedGroup, buildPlan, describeScale, detectStage, parseCsv, parseGradesFile, resolveGrade, termCode, type GradeSheet, type SheetField } from "../src/grades.js";
 
 const cfg = { min: 1, max: 10, integerOnly: true, decimalSeparator: "," as const, extraValues: ["NP"] };
 
@@ -58,6 +58,13 @@ assert.equal(resolveGrade({ ...input, type: "number", min: 1, max: 5 }, "6", zer
 const scaleOf = (f: SheetField, context: string) => describeScale({ frameUrl: "", headers: [], column: "x", editableColumns: [], context, rows: [{ index: 0, name: "A", field: f }] }, zero);
 assert.equal(scaleOf(terms, "ESO 1ºA").kind, "terminos");
 assert.deepEqual([scaleOf(input, "CFGM 1º SMR").min, scaleOf(input, "BTO N 1ºA").min], [1, 0]);
+
+// Grupos en los que no se ponen notas
+assert.equal(blockedGroup("ESO 2º D · Tecnología", ["eso 2 d"]), "eso 2 d");
+assert.equal(blockedGroup("ESO 2º DE · Tecnología", ["ESO 2º D"]), null);
+assert.equal(blockedGroup("BTO N 2ºA · TIC", ["ESO 2º D", "BTO N 2ºA"]), "BTO N 2ºA");
+assert.equal(blockedGroup("ESO 1ºAB plu", ["ESO 2"]), null);
+assert.equal(blockedGroup("ESO 2º E", ["ESO 2"]), "ESO 2");
 
 // Emparejamiento: homónimos parciales -> ambigua; duplicados -> duplicada
 const row = (index: number, name: string) => ({ index, name, field: { ...input, key: `f${index}` } });

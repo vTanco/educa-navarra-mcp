@@ -92,6 +92,23 @@ const ConfigSchema = z.object({
       errorPattern: "(error|no se ha podido|incorrect[oa]|obligatori[oa])"
     }),
 
+  /** Cómo llegar en Educa-Gestión a la pantalla de calificaciones de evaluación por asignatura. */
+  gradesScreen: z
+    .object({
+      /** Ruta de Educa-Gestión dentro del dominio de Educa. */
+      path: z.string().default("/Educa/es/"),
+      /** Entradas de menú que se pulsan por orden hasta que se abre el selector de grupo. */
+      menu: z.array(z.string()).default(["CUADERNO DE AULA", "CALIFICACIONES", "DE EVALUACIÓN: ASIGNATURA"])
+    })
+    .default({ path: "/Educa/es/", menu: ["CUADERNO DE AULA", "CALIFICACIONES", "DE EVALUACIÓN: ASIGNATURA"] }),
+
+  /**
+   * Grupos o agrupamientos en los que este docente no pone notas (p. ej. docencia compartida).
+   * El servidor se niega a escribir o guardar notas si la pantalla abierta es de uno de ellos.
+   * Basta el principio del nombre: "ESO 2" cubre "ESO 2º D" y "ESO 2º E".
+   */
+  noGradeGroups: z.array(z.string()).default([]),
+
   /** El servidor nunca pulsa elementos cuyo texto encaje con esto. */
   forbiddenClickPattern: z
     .string()
@@ -155,6 +172,11 @@ function applyEnv(config: EducaConfig): EducaConfig {
   if (process.env.EDUCA_CREDENTIALS_FILE) config.credentialsFile = process.env.EDUCA_CREDENTIALS_FILE;
   if (process.env.EDUCA_BROWSER_PATH) config.browserExecutablePath = process.env.EDUCA_BROWSER_PATH;
   if (process.env.EDUCA_HEADLESS) config.headless = process.env.EDUCA_HEADLESS === "1";
+  // Claude Desktop deja "${user_config.x}" sin sustituir cuando el campo opcional se queda vacío
+  const noGrade = process.env.EDUCA_NO_GRADE_GROUPS?.trim();
+  if (noGrade && !noGrade.startsWith("${")) {
+    config.noGradeGroups = [...config.noGradeGroups, ...noGrade.split(/[,;\n]+/).map(g => g.trim()).filter(Boolean)];
+  }
   if (process.env.EDUCA_ALLOWED_HOSTS) config.allowedHosts = process.env.EDUCA_ALLOWED_HOSTS.split(",");
   return config;
 }

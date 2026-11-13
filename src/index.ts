@@ -19,9 +19,10 @@ import { join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
+import { CATALOG_FILE, findByName, loadCatalog, saveCatalog, type GroupCatalog, type GroupEntry } from "./groups.js";
 import { EducaBrowser, FieldGone } from "./browser.js";
 import { loadConfig, PROJECT_DIR } from "./config.js";
-import { buildPlan, describeScale, parseGradesFile, summarizePlan, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
+import { blockedGroup, buildPlan, describeScale, normalize as normalizeName, parseGradesFile, summarizePlan, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
 
 const CHARACTER_LIMIT = 25_000;
 const PACKAGE_VERSION: string = (JSON.parse(readFileSync(join(PROJECT_DIR, "package.json"), "utf8")) as { version: string }).version;
@@ -39,6 +40,23 @@ if (process.stdin.isTTY) {
 }
 const { config, path: configPath } = loadConfig();
 const browser = new EducaBrowser(config);
+
+/** Lanza un error si la pantalla abierta es de un grupo en el que el docente ha dicho que no pone notas. */
+function assertGroupAllowed(sheet: GradeSheet, action: string): void {
+  if (!config.noGradeGroups.length) return;
+  const blocked = blockedGroup(sheet.context, config.noGradeGroups);
+  if (blocked) {
+    throw new Error(`No puedo ${action}: la pantalla abierta es de "${sheet.context}" y en los ajustes del conector figura "${blocked}" como grupo en el que no pones notas. Si es un error, quítalo de "Grupos en los que no pongo notas" en los ajustes y reinicia la aplicación.`);
+  }
+  if (!sheet.context?.trim()) {
+    throw new Error(`No puedo ${action}: no consigo identificar el grupo de la pantalla abierta y hay grupos marcados como "no pongo notas" (${config.noGradeGroups.join(", ")}). Abre el grupo desde el selector de Educa y vuelve a intentarlo.`);
+  }
+}
+
+function blockedNote(sheet: GradeSheet): string | null {
+  const blocked = blockedGroup(sheet.context, config.noGradeGroups);
+  return blocked ? `⛔ Este grupo está en tu lista "Grupos en los que no pongo notas" (${blocked}): se puede consultar, pero el conector no escribirá ni guardará notas aquí.` : null;
+}
 
 interface StoredPlan {
   id: string;
@@ -296,7 +314,9 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
       await requireLogin();
       const sheet = await browser.readGradeSheet(column, true);
       const scale = describeScale(sheet, config.grades);
+      const blocked = blockedNote(sheet);
       const data = {
+        no_grades_group: blocked !== null,
         context: sheet.context ?? null,
         stage: scale.stage,
         scale,
@@ -308,8 +328,116 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
       if (!sheet.column) {
         return text(`La tabla tiene varias columnas editables y no sé cuál es la nota: ${sheet.editableColumns.join(" | ")}. Vuelve a llamar con column.`);
       }
-      const lines = [`# Tabla de notas · columna "${sheet.column}" · ${data.students.length} alumnos`, ...(sheet.context ? [`Pantalla: ${sheet.context}`] : []), `Escala detectada: ${scale.description}`, "", "| # | Alumno | Nota actual |", "|---|---|---|"];
+      const lines = [`# Tabla de notas · columna "${sheet.column}" · ${data.students.length} alumnos`, ...(sheet.context ? [`Pantalla: ${sheet.context}`] : []), `Escala detectada: ${scale.description}`, ...(blocked ? [blocked] : []), "", "| # | Alumno | Nota actual |", "|---|---|---|"];
       data.students.forEach((s, i) => lines.push(`| ${i + 1} | ${s.name} | ${s.grade || "(vacía)"}${s.editable ? "" : " 🔒"} |`));
+      return text(lines.join("\n"));
+    }
+  );
+
+  // Recorre el selector de Educa y guarda en local grupos, agrupamientos, asignaturas y evaluaciones
+  async function refreshCatalog(): Promise<GroupCatalog> {
+    await browser.openGroupSelector();
+    const names = await browser.listGroupNames();
+    const groups: GroupEntry[] = [];
+    for (const kind of ["grupo", "agrupamiento"] as const) {
+      for (const name of names[kind]) groups.push({ name, kind, subjects: await browser.subjectsOfGroup(kind, name) });
+    }
+    if (!groups.length) throw new Error("Educa no lista ningún grupo ni agrupamiento en el selector de calificaciones. Comprueba en la ventana del navegador que tu usuario tiene grupos asignados este curso.");
+    // Las evaluaciones solo se ven con una pantalla de notas abierta: se abre la primera asignatura (solo lectura)
+    let evaluations: string[] = [];
+    const first = groups.find(g => g.subjects.length);
+    if (first) {
+      await browser.openSubject(first.kind, first.name, first.subjects[0]);
+      evaluations = (await browser.evaluations()).options;
+    }
+    const catalog: GroupCatalog = { updatedAt: new Date().toISOString(), groups, evaluations };
+    saveCatalog(catalog);
+    return catalog;
+  }
+
+  function catalogMarkdown(catalog: GroupCatalog): string {
+    const lines = [`# Tus grupos en Educa (${catalog.groups.length})`, ""];
+    for (const g of catalog.groups) {
+      const blocked = blockedGroup(g.name, config.noGradeGroups);
+      lines.push(`- **${g.name}** (${g.kind})${blocked ? " ⛔ no pones notas" : ""}: ${g.subjects.join(" · ") || "(sin asignaturas)"}`);
+    }
+    if (catalog.evaluations.length) lines.push("", `Evaluaciones: ${catalog.evaluations.join(" · ")}`);
+    lines.push("", `Lista guardada en ${CATALOG_FILE} (${catalog.updatedAt.slice(0, 16).replace("T", " ")} UTC). Para abrir uno: educa_open_group.`);
+    return lines.join("\n");
+  }
+
+  server.registerTool(
+    "educa_refresh_groups",
+    {
+      title: "Actualizar mis grupos",
+      description: `Lee de Educa los grupos y agrupamientos del docente, con las asignaturas de cada uno y las evaluaciones disponibles, y guarda la lista en su ordenador. No escribe nada en Educa. Tarda unos segundos por grupo.
+
+Úsala la primera vez, cuando el profesor diga que han cambiado sus grupos (curso nuevo, sustitución) o cuando educa_open_group no encuentre un grupo. Marca con ⛔ los grupos que el profesor ha indicado en los ajustes como "no pongo notas".`,
+      inputSchema: z.strictObject({ response_format: ResponseFormat }),
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true }
+    },
+    async ({ response_format }) => {
+      await requireLogin();
+      const catalog = await refreshCatalog();
+      if (response_format === "json") return json({ ...catalog, no_grade_groups: catalog.groups.filter(g => blockedGroup(g.name, config.noGradeGroups)).map(g => g.name) });
+      return text(catalogMarkdown(catalog));
+    }
+  );
+
+  server.registerTool(
+    "educa_open_group",
+    {
+      title: "Abrir las notas de un grupo",
+      description: `Abre directamente la pantalla de calificaciones de evaluación de un grupo o agrupamiento y asignatura, y opcionalmente cambia de evaluación. Usa la lista guardada por educa_refresh_groups (la actualiza sola si no existe o si el grupo no aparece). No escribe ninguna nota.
+
+Basta parte del nombre si no es ambiguo: group="1ºAB", subject="Tecnología", evaluation="2". Si el grupo solo tiene una asignatura, subject es opcional. Devuelve el grupo abierto, la escala detectada y el número de alumnos; después usa educa_read_grade_sheet o educa_preview_grades.`,
+      inputSchema: z.strictObject({
+        group: z.string().min(1).describe("Grupo o agrupamiento, p. ej. 'ESO 1ºAB plu' o 'BTO N 1ºA'"),
+        subject: z.string().min(1).optional().describe("Asignatura; opcional si el grupo solo tiene una"),
+        evaluation: z.string().min(1).optional().describe("Evaluación, p. ej. '1a Evaluación', '2' o 'Final'; por defecto la que Educa abre")
+      }),
+      annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true }
+    },
+    async ({ group, subject, evaluation }) => {
+      await requireLogin();
+      let catalog = loadCatalog();
+      let refreshed = false;
+      let found = catalog ? findByName(catalog.groups, group, g => g.name) : null;
+      if (!found || !found.ok) {
+        catalog = await refreshCatalog();
+        refreshed = true;
+        found = findByName(catalog.groups, group, g => g.name);
+      }
+      if (!found.ok) {
+        const list = (found.candidates.length ? found.candidates : catalog!.groups).map(g => g.name).join(" / ");
+        throw new Error(found.reason === "varios" ? `"${group}" encaja con varios grupos: ${list}. Indica el nombre completo.` : `No tienes ningún grupo que encaje con "${group}" en Educa. Tus grupos: ${list}`);
+      }
+      const entry = found.item;
+      let subjectName: string;
+      if (subject) {
+        const s = findByName(entry.subjects, subject, x => x);
+        if (!s.ok) throw new Error(`${entry.name} no tiene ${s.reason === "varios" ? "una única" : "ninguna"} asignatura que encaje con "${subject}". Asignaturas: ${entry.subjects.join(" / ") || "(ninguna; prueba educa_refresh_groups)"}`);
+        subjectName = s.item;
+      } else if (entry.subjects.length === 1) subjectName = entry.subjects[0];
+      else throw new Error(`${entry.name} tiene varias asignaturas: ${entry.subjects.join(" / ")}. Indica subject.`);
+
+      await browser.openSubject(entry.kind, entry.name, subjectName);
+      const evs = await browser.evaluations();
+      let current = evs.current;
+      if (evaluation) {
+        const e = findByName(evs.options, evaluation, x => x);
+        if (!e.ok) throw new Error(`Esta pantalla no tiene ${e.reason === "varios" ? "una única" : "ninguna"} evaluación que encaje con "${evaluation}". Evaluaciones: ${evs.options.join(" / ") || "(no se ha encontrado el selector de evaluación)"}`);
+        if (normalizeName(e.item) !== normalizeName(current)) await browser.selectEvaluation(e.item);
+        current = e.item;
+      }
+      const sheet = await browser.readGradeSheet(undefined, true).catch(() => null);
+      const lines = [`Abierto: **${entry.name}** · ${subjectName}${current ? ` · ${current}` : ""}${refreshed ? " (he actualizado antes tu lista de grupos)" : ""}`];
+      if (sheet) {
+        lines.push(`Alumnos: ${sheet.rows.length}${sheet.column ? ` · columna editable: ${sheet.column}` : sheet.editableColumns.length ? ` · columnas editables: ${sheet.editableColumns.join(" | ")}` : " · ninguna columna editable (¿evaluación cerrada?)"}`);
+        lines.push(`Escala detectada: ${describeScale(sheet, config.grades).description}`);
+        const blocked = blockedNote(sheet) ?? (blockedGroup(entry.name, config.noGradeGroups) ? blockedNote({ ...sheet, context: entry.name }) : null);
+        if (blocked) lines.push(blocked);
+      } else lines.push("No veo alumnos en la pantalla; puede que el grupo esté vacío o que Educa siga cargando (educa_inspect_page).");
       return text(lines.join("\n"));
     }
   );
@@ -371,6 +499,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       if (!sheet.column && !config.gradeSheet.gradeFieldSelector) {
         throw new Error(`La tabla de Educa tiene varias columnas editables: ${sheet.editableColumns.join(" | ")}. Indica en column cuál es la de la nota.`);
       }
+      assertGroupAllowed(sheet, "preparar notas para este grupo");
       const plan = buildPlan(sheet, inputs, config.grades, args.stage);
       const scale = describeScale(sheet, config.grades, args.stage);
       const stored: StoredPlan = { id: randomUUID().slice(0, 8), column: args.column ?? null, createdAt: Date.now(), plan, filled: false };
@@ -406,6 +535,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       if (sheet.autoSaves && !confirm_autosave) {
         throw new Error("En esta pantalla de Educa no hay botón Guardar: cada nota queda guardada en cuanto se elige. Enseña la vista previa al profesor y, solo si autoriza expresamente guardar, vuelve a llamar con confirm_autosave=true.");
       }
+      assertGroupAllowed(sheet, "escribir notas en este grupo");
       const todo = stored.plan.items.filter(i => i.status === "cambia" && (include_fuzzy || !i.fuzzyMatch));
       // La tabla debe seguir teniendo a los mismos alumnos en las mismas filas
       for (const item of todo) {
@@ -473,6 +603,7 @@ IMPORTANTE: llama solo cuando el profesor haya dicho expresamente que guarde, y 
     async () => {
       await requireLogin();
       if (!lastFilledPlan) throw new Error("No se ha rellenado ninguna nota en esta sesión. Usa educa_preview_grades y educa_fill_grades primero.");
+      if (config.noGradeGroups.length) assertGroupAllowed(await browser.readGradeSheet(lastFilledPlan.column ?? undefined), "guardar notas de este grupo");
       const before = await browser.screenshot("antes-de-guardar");
       const res = await browser.save();
       const after = await browser.screenshot("despues-de-guardar");
