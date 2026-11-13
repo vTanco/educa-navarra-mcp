@@ -7,7 +7,7 @@
  * de src/index.ts, lo valida y lo empaqueta con @anthropic-ai/mcpb.
  */
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -29,10 +29,10 @@ cpSync(join(root, "assets", "icon.png"), join(stage, "icon.png"));
 const { name, version, description, license, type, dependencies, overrides, engines } = pkg;
 writeFileSync(join(stage, "package.json"), JSON.stringify({ name, version, description, license, type, dependencies, overrides, engines }, null, 2));
 
-// Herramientas, sacadas del código para que el manifiesto no se quede viejo
-const source = readFileSync(join(root, "src", "index.ts"), "utf8");
+// Herramientas, sacadas del código (todos los src/*.ts) para que el manifiesto no se quede viejo
+const source = readdirSync(join(root, "src")).filter(f => f.endsWith(".ts")).map(f => readFileSync(join(root, "src", f), "utf8")).join("\n");
 const tools = [...source.matchAll(/registerTool\(\s*"([^"]+)",\s*\{\s*title:\s*"([^"]+)"/g)].map(([, name, description]) => ({ name, description }));
-if (tools.length === 0) throw new Error("No he encontrado herramientas en src/index.ts.");
+if (tools.length === 0) throw new Error("No he encontrado herramientas en src/.");
 
 const manifest = JSON.parse(readFileSync(join(root, "manifest.json"), "utf8"));
 manifest.version = version;
