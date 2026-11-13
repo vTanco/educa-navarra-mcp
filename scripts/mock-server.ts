@@ -55,6 +55,35 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
     if (url.pathname === "/marco") {
       return send(page("Educa - Evaluación", `<div id="usuario-conectado">Profe Demo</div><h1>Evaluación · Calificaciones</h1><iframe src="/notas" width="1000" height="700"></iframe>`));
     }
+    if (url.pathname === "/Educa/es/") {
+      // Imita la entrada a Educa-Gestión: menú, diálogo de grupo / agrupamiento y lista de asignaturas
+      const datos = { grupo: { "BTO N 1ºA": ["Tecnologías de la Información y la Comunicación"], "ESO 2º D": ["Tecnología y Digitalización ES2"] }, agrupamiento: { "ESO 1ºAB plu": ["Tecnología y Digitalización ES1", "Atención educativa"] } };
+      return send(page("EducaGestion", `<div id="usuario-conectado">Profe Demo</div>
+        <nav><a href="#" onclick="show('m2')">CUADERNO DE AULA</a> <a href="#" id="m2" hidden onclick="show('m3')">CALIFICACIONES</a> <a href="#" id="m3" hidden onclick="show('dlg')">DE EVALUACIÓN: ASIGNATURA</a></nav>
+        <div role="dialog" class="p-dialog" id="dlg" hidden>
+          <label>Grupo: <p-select placeholder="Seleccione un grupo" data-kind="grupo" style="display:inline-block"><span role="combobox" class="p-placeholder">Seleccione un grupo</span></p-select></label>
+          <label>Agrupamiento: <p-select placeholder="Seleccione un agrupamiento" data-kind="agrupamiento" style="display:inline-block"><span role="combobox" class="p-placeholder">Seleccione un agrupamiento</span></p-select></label>
+          <p-listbox><ul role="listbox" id="asignaturas"></ul></p-listbox><button>Cancelar</button>
+        </div>
+        <script>
+          const DATOS = ${JSON.stringify(datos)};
+          function show(id) { document.getElementById(id).hidden = false; }
+          document.querySelectorAll("p-select").forEach(ps => ps.addEventListener("click", () => {
+            const abierto = document.querySelector(".p-select-overlay");
+            if (abierto) { abierto.remove(); return; }
+            const ov = document.createElement("div"); ov.className = "p-select-overlay";
+            ov.innerHTML = '<ul role="listbox">' + Object.keys(DATOS[ps.dataset.kind]).map(g => '<li role="option"><span>' + g + '</span></li>').join("") + '</ul>';
+            document.body.appendChild(ov);
+            ov.querySelectorAll("li").forEach(li => li.addEventListener("click", () => {
+              const g = li.textContent; ps.querySelector("[role=combobox]").textContent = g; ov.remove();
+              document.getElementById("asignaturas").innerHTML = DATOS[ps.dataset.kind][g].map(a => '<li role="option">' + a + '</li>').join("");
+              document.querySelectorAll("#asignaturas li").forEach(a => a.addEventListener("click", () => {
+                location.href = "/cuaderno?nombre=" + encodeURIComponent(g) + "&materia=" + encodeURIComponent(a.textContent) + (g.startsWith("BTO") ? "&bach=1" : "");
+              }));
+            }));
+          }));
+        </script>`));
+    }
     if (url.pathname === "/cuaderno/guardar" && req.method === "POST") {
       const body = await readBody(req);
       (saved["cuaderno"] ??= {})[body.get("id") ?? ""] = body.get("nota") ?? "";
@@ -66,8 +95,8 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
       const cur = saved["cuaderno"] ?? {};
       // Variantes: ?bach=1 (Bachillerato, nota tecleada), ?fp=1 (ciclo formativo, nota tecleada 1-10), ?apto=1 (Apto / No apto)
       const typed = url.searchParams.get("bach") || url.searchParams.get("fp");
-      const grupo = url.searchParams.get("fp") ? "CFGM 1º SMR" : url.searchParams.get("bach") ? "BTO N 1ºA" : url.searchParams.get("apto") ? "CFGS 2º DAM" : "ESO 1ºAB plu";
-      const materia = url.searchParams.get("fp") ? "Redes locales" : url.searchParams.get("apto") ? "Formación en empresa" : "Tecnología";
+      const grupo = url.searchParams.get("nombre") ?? (url.searchParams.get("fp") ? "CFGM 1º SMR" : url.searchParams.get("bach") ? "BTO N 1ºA" : url.searchParams.get("apto") ? "CFGS 2º DAM" : "ESO 1ºAB plu");
+      const materia = url.searchParams.get("materia") ?? (url.searchParams.get("fp") ? "Redes locales" : url.searchParams.get("apto") ? "Formación en empresa" : "Tecnología");
       const opciones = typed ? ["FPEX"] : url.searchParams.get("apto") ? ["APTO", "NO APTO", "EX"] : ["SB", "NT", "BI", "SU", "IN", "FPEX"];
       const cards = STUDENTS.map(s => {
         const [ap, nom] = s.name.split(", ");
@@ -85,6 +114,7 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
       return send(page("EducaGestion", `<div id="usuario-conectado">Profe Demo</div><h3>Calificaciones de evaluación: Asignatura</h3>
         <app-selector-grupo-asignatura-anidado><div class="noPopUp"><p-select placeholder="Seleccione un grupo"><span role="combobox">${grupo}</span></p-select><ul role="listbox"><li role="option" aria-selected="true">${materia}</li><li role="option" aria-selected="false">Otra materia</li></ul></div></app-selector-grupo-asignatura-anidado>
         <app-leyenda-calificaciones><ul>${(typed ? ["FPEX"] : ["SB", "NT", "BI", "SU", "IN", "FPEX"]).map(c => `<li><span>${c}</span><span>= x</span></li>`).join("")}</ul></app-leyenda-calificaciones>
+        <p-select placeholder="evl" id="evl" style="display:inline-block"><span role="combobox">1a Evaluación</span></p-select>
         <div class="listadoCalificaciones">${cards}</div>
         <div id="botones"></div>
         <script>
@@ -97,6 +127,15 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
               document.getElementById("botones").innerHTML = '<div class="mensaje">Datos guardados correctamente</div>';
             };
           }
+          document.getElementById("evl").addEventListener("click", ev => {
+            ev.stopPropagation();
+            const abierto = document.querySelector(".p-select-overlay");
+            if (abierto) { abierto.remove(); return; }
+            const ov = document.createElement("div"); ov.className = "p-select-overlay";
+            ov.innerHTML = '<ul role="listbox">' + ["1a Evaluación", "2a Evaluación", "Evaluación Final"].map(e => '<li role="option"><span>' + e + '</span></li>').join("") + '</ul>';
+            document.body.appendChild(ov);
+            ov.querySelectorAll("li").forEach(li => li.addEventListener("click", () => { document.querySelector("#evl [role=combobox]").textContent = li.textContent; ov.remove(); }));
+          });
           const OPCIONES = ${JSON.stringify(opciones)};
           document.addEventListener("keydown", ev => ev.key === "Escape" && document.querySelectorAll(".p-select-overlay").forEach(o => o.remove()));
           document.querySelectorAll(".listadoCalificaciones p-select").forEach(ps => (ps.querySelector(".p-select-dropdown") || ps).addEventListener("click", ev => {

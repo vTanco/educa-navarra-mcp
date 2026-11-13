@@ -8,6 +8,8 @@ La mayoría de docentes **no necesitan nada de esto**: el conector funciona tal 
 |---|---|---|
 | `educa_login` | Abre Educa e inicia sesión (automática o a mano) | No |
 | `educa_status` | Estado de la sesión y la configuración | No |
+| `educa_refresh_groups` | Leer de Educa tus grupos, agrupamientos, asignaturas y evaluaciones y guardar la lista en tu ordenador (`~/.educa-mcp/grupos.json`) | No |
+| `educa_open_group` | Abrir directamente las notas de un grupo, asignatura y evaluación | No |
 | `educa_navigate`, `educa_click`, `educa_select_filter` | Moverse por Educa hasta la pantalla de calificaciones | No (nunca pulsa cerrar, firmar, borrar…) |
 | `educa_inspect_page`, `educa_dump_html`, `educa_screenshot` | Ver qué hay en la página | No |
 | `educa_load_grades_file` | Leer tu Excel o CSV | No |
@@ -36,6 +38,7 @@ La sesión de Educa se guarda en un perfil propio del navegador (no toca tu perf
 | Variable | Para qué |
 |---|---|
 | `EDUCA_USER`, `EDUCA_PASSWORD` | Inicio de sesión automático |
+| `EDUCA_NO_GRADE_GROUPS` | Grupos en los que no pones notas, separados por comas (p. ej. `ESO 2º D, ESO 2º E`). El conector se niega a escribir o guardar en ellos. En el fichero de configuración: `noGradeGroups` |
 | `EDUCA_CREDENTIALS_FILE` | Ruta a un fichero `{"usuario": "...", "clave": "..."}` (por defecto `~/.educa-mcp/credenciales.json`) |
 | `EDUCA_BROWSER_CHANNEL` | `chrome`, `msedge` o `chromium` (el de Playwright) |
 | `EDUCA_BROWSER_PATH` | Ruta a un ejecutable de Chrome/Chromium concreto |
@@ -57,6 +60,8 @@ Opcional. Se busca en `EDUCA_CONFIG`, en `educa.config.json` de la carpeta actua
 | `login.userSelector`, `login.passwordSelector`, `login.submitSelector` | Si el formulario de acceso no se detecta solo |
 | `gradeSheet.*` | Selectores de fila, nombre y campo de nota si la tabla no se detecta sola |
 | `save.buttonSelector` | Selector del botón de guardar si no se llama *Guardar/Grabar/Aceptar* |
+| `noGradeGroups` | Grupos en los que no pones notas; el conector se niega a escribir en ellos |
+| `gradesScreen.path`, `gradesScreen.menu` | Ruta de Educa-Gestión y entradas de menú hasta la pantalla de calificaciones, si en tu centro son distintas |
 | `forbiddenClickPattern` | Botones que nunca se pulsan |
 
 ## Inicio de sesión automático

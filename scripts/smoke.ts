@@ -27,6 +27,7 @@ await client.connect(
       EDUCA_BASE_URL: url,
       EDUCA_ALLOWED_HOSTS: "127.0.0.1",
       EDUCA_HEADLESS: "1",
+      EDUCA_NO_GRADE_GROUPS: "ESO 2º D, BTO N 2",
       EDUCA_BROWSER_CHANNEL: process.env.EDUCA_BROWSER_CHANNEL ?? "chromium",
       EDUCA_CREDENTIALS_FILE: credentials,
       EDUCA_CONFIG: resolve("test/mock/educa.config.json"),
@@ -47,7 +48,7 @@ async function call(name: string, args: Record<string, unknown> = {}, expectErro
 
 try {
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 14);
+  assert.equal(tools.length, 16);
 
   await call("educa_inspect_page", {}, true); // sin login
   const bad = await call("educa_login", { wait_minutes: 0.5 }, true); // contraseña incorrecta: un solo intento
@@ -137,6 +138,29 @@ try {
   assert.equal(saved["cuaderno"], undefined);
   await call("educa_save_grades", { confirm: true });
   assert.deepEqual(saved["cuaderno"], { "1001": "APTO", "1006": "NO APTO" });
+
+  // --- Mis grupos: leer la lista de Educa, guardarla y abrir un grupo directamente
+  const cat = (await call("educa_refresh_groups", { response_format: "json" })).structuredContent as { groups: { name: string; kind: string; subjects: string[] }[]; evaluations: string[]; no_grade_groups: string[] };
+  assert.deepEqual(cat.groups.map(g => `${g.kind}:${g.name}:${g.subjects.length}`), ["grupo:BTO N 1ºA:1", "grupo:ESO 2º D:1", "agrupamiento:ESO 1ºAB plu:2"]);
+  assert.deepEqual(cat.evaluations, ["1a Evaluación", "2a Evaluación", "Evaluación Final"]);
+  assert.deepEqual(cat.no_grade_groups, ["ESO 2º D"]);
+  assert.match(textOf(await call("educa_refresh_groups")), /ESO 2º D\*\* \(grupo\) ⛔/);
+  await call("educa_open_group", { group: "1ºAB" }, true); // dos asignaturas: hay que indicar cuál
+  const og = textOf(await call("educa_open_group", { group: "1ºAB", subject: "tecnologia", evaluation: "2" }));
+  assert.match(og, /ESO 1ºAB plu\*\* · Tecnología y Digitalización ES1 · 2a Evaluación/);
+  assert.match(og, /Términos \(ESO\)/);
+  assert.match(textOf(await call("educa_open_group", { group: "bto n 1a" })), /Nota numérica tecleada de 0 a 10/);
+  assert.match(textOf(await call("educa_open_group", { group: "ESO 2º D" })), /no escribirá ni guardará/);
+  await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }] }, true);
+  await call("educa_open_group", { group: "4º ESO Z" }, true);
+
+  // --- Grupos en los que el docente no pone notas: se pueden leer, pero no preparar ni escribir notas
+  await call("educa_navigate", { url: url + "cuaderno?nombre=" + encodeURIComponent("ESO 2º D") });
+  const nb = await call("educa_read_grade_sheet", { response_format: "json" });
+  assert.equal((nb.structuredContent as { no_grades_group: boolean }).no_grades_group, true);
+  assert.match(textOf(await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }] }, true)), /no pones notas/);
+  await call("educa_navigate", { url: url + "cuaderno?nombre=" + encodeURIComponent("ESO 2º DE") });
+  assert.equal(((await call("educa_read_grade_sheet", { response_format: "json" })).structuredContent as { no_grades_group: boolean }).no_grades_group, false);
 
   await call("educa_close_browser");
   console.error("\n✅ Prueba superada");
