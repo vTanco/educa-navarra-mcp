@@ -53,8 +53,8 @@ jobs:
           if npm view "educa-navarra-mcp@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
             echo "Esta versión ya está en npm; no se vuelve a publicar."
           else
-            # Trusted publishing (sin tokens): la versión queda en espera y la
-            # aprueba la persona mantenedora en npmjs.com → Staged Packages.
-            npm stage publish --provenance --access public
-            echo "::notice::Versión enviada a npm. Apruébala en npmjs.com → Staged Packages."
+            # Trusted publishing (sin tokens). La conexión de npm permite "npm publish";
+            # si algún día se quita ese permiso, cambia esto por "npm stage publish"
+            # y aprueba cada versión en npmjs.com → Staged Packages.
+            npm publish --provenance --access public
           fi

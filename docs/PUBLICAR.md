@@ -9,7 +9,7 @@
    git push --follow-tags
    ```
 3. GitHub Actions (`.github/workflows/release.yml`) pasa las pruebas, crea la versión en GitHub con el fichero `educa-navarra-mcp.mcpb` adjunto y envía la versión a npm.
-4. Si npm la deja **en espera** (staged publishing), apruébala en npmjs.com → pestaña **Staged Packages** → **Approve** (pide el segundo factor). Hasta entonces `npx` sigue instalando la versión anterior.
+4. Si npm la deja **en espera** (staged publishing), algo que no debería pasar con la conexión configurada, apruébala en npmjs.com → pestaña **Staged Packages** → **Approve** (pide el segundo factor). Hasta entonces `npx` sigue instalando la versión anterior.
 
 El enlace de descarga del README (`releases/latest/download/educa-navarra-mcp.mcpb`) apunta siempre a la última versión.
 
@@ -18,7 +18,7 @@ El enlace de descarga del README (`releases/latest/download/educa-navarra-mcp.mc
 Para que GitHub publique en npm sin guardar contraseñas ni tokens:
 
 1. Entra en [npmjs.com](https://www.npmjs.com) → paquete **educa-navarra-mcp** → **Settings** → **Trusted publishing**.
-2. Elige **GitHub Actions** y rellena: organización o usuario `vTanco`, repositorio `educa-navarra-mcp`, workflow `release.yml`, entorno vacío. Deja sin marcar *Allow npm publish* y *Allow npm dist-tag*: el workflow usa `npm stage publish`, así que cada versión espera a que la apruebes con tu segundo factor.
+2. Elige **GitHub Actions** y rellena: organización o usuario `vTanco`, repositorio `educa-navarra-mcp`, workflow `release.yml`, entorno vacío. Marca *Allow npm publish* (y *Allow npm dist-tag*): así el workflow publica directamente con `npm publish`. Si prefieres aprobar cada versión a mano, desmárcalas y cambia en `release.yml` `npm publish` por `npm stage publish`.
 3. Guarda. Desde entonces, cada etiqueta `v*` publica sola.
 
 npm solo deja configurar esto cuando el paquete ya existe, así que la **primera publicación** se hace a mano desde el ordenador de la persona mantenedora:
