@@ -39,16 +39,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ steps.version.outputs.tag }}" build/educa-navarra-mcp.mcpb --target "$GITHUB_SHA" \
-            --title "${{ steps.version.outputs.tag }}" --notes "Descarga **educa-navarra-mcp.mcpb** y haz doble clic para instalarlo en Claude Desktop. Cambios: ver CHANGELOG.md."
+          tag="${{ steps.version.outputs.tag }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "La versión $tag ya existe en GitHub; solo se actualiza el .mcpb."
+            gh release upload "$tag" build/educa-navarra-mcp.mcpb --clobber
+          else
+            gh release create "$tag" build/educa-navarra-mcp.mcpb --target "$GITHUB_SHA" \
+              --title "$tag" --notes "Descarga **educa-navarra-mcp.mcpb** y haz doble clic para instalarlo en Claude Desktop. Cambios: ver CHANGELOG.md."
+          fi
       - name: Publicar en npm
         run: |
           npm install -g npm@latest
           if npm view "educa-navarra-mcp@$(node -p "require('./package.json').version")" version >/dev/null 2>&1; then
             echo "Esta versión ya está en npm; no se vuelve a publicar."
           else
+            # Trusted publishing (sin tokens). La conexión de npm permite "npm publish";
+            # si algún día se quita ese permiso, cambia esto por "npm stage publish"
+            # y aprueba cada versión en npmjs.com → Staged Packages.
             npm publish --provenance --access public
           fi
-        env:
-          # Vacío si se usa trusted publishing; si no, crea el secreto NPM_TOKEN en el repo.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
