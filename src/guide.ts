@@ -24,7 +24,7 @@ export const SERVER_INSTRUCTIONS = `Conector no oficial para meter notas de eval
 Flujo:
 1. Averigua grupo, materia y evaluación. Si falta algo, pregúntalo antes de abrir Educa.
 2. Busca el fichero con educa_list_grade_files (carpeta de notas del docente). Los ficheros suelen llamarse EVALUACIÓN_GRUPO_MATERIA, p. ej. "1EV_BTO-1A_TIC.xlsx". Si hay varios candidatos o ninguno, pregunta; no adivines. Si el docente adjunta el fichero en el chat en vez de dejarlo en la carpeta, puedes pasar las notas directamente a educa_preview_grades.
-3. educa_login y abre la pantalla de notas del grupo: con educa_open_group si está disponible; si no, Educa-Gestión → Cuaderno de aula → Calificaciones (educa_inspect_page, educa_click, educa_select_filter). Si el grupo no aparece, educa_refresh_groups (si está disponible) relee los grupos del docente.
+3. educa_login y abre la pantalla de notas con educa_open_group (grupo, materia y evaluación; vale el nombre parcial). Si el grupo no aparece, educa_refresh_groups relee los grupos del docente desde Educa. Solo si eso falla, navega a mano: Educa-Gestión → Cuaderno de aula → Calificaciones (educa_inspect_page, educa_click, educa_select_filter).
 4. educa_preview_grades y enseña la tabla completa: alumnos sin emparejar, nombres aproximados, notas rechazadas y alumnos de Educa sin nota. No cambia nada.
 5. Solo si el docente da el visto bueno, educa_fill_grades (escribe en pantalla sin guardar). Pídele que lo revise en la ventana del navegador.
 6. educa_save_grades únicamente tras una confirmación expresa del docente en este momento ("sí, guarda"). Nunca la des por supuesta.
@@ -34,6 +34,7 @@ Reglas:
 - Las coincidencias de nombre aproximadas no se escriben sin confirmación.
 - Nunca cierres, firmes, bloquees ni publiques una evaluación: eso lo hace el docente a mano.
 - Minimiza los datos personales en el chat: no pidas capturas ni volcados de la página si no hacen falta.
+- Los grupos de "Grupos en los que no pongo notas" se pueden consultar, pero no prepares ni escribas notas en ellos.
 - La sesión de Educa caduca a los 30-40 minutos; si caduca, vuelve a llamar a educa_login.
 - Si el docente pregunta cómo preparar sus ficheros, resume esto: una hoja por grupo y materia, la primera fila con cabeceras (Alumno o Apellidos + Nombre, y Nota), un alumno por fila con el nombre igual que en Educa, notas enteras (o IN/SU/BI/NT/SB en ESO), celdas vacías para quien no tenga nota, nombre de fichero EVALUACIÓN_GRUPO_MATERIA y todos en la carpeta de notas. Guía completa: https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md`;
 

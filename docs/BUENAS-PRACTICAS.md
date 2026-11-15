@@ -83,7 +83,14 @@ Más detalle y normativa: [normativa-evaluacion.md](normativa-evaluacion.md).
 - ❌ `.xls` antiguo, `.ods` (LibreOffice) o Numbers: ábrelos y usa *Guardar como… → Libro de Excel (.xlsx)*.
 - Google Sheets: *Archivo → Descargar → Microsoft Excel (.xlsx)* y guárdalo en tu carpeta de notas.
 
-## 6. El día de la evaluación
+## 6. Al empezar el curso (o si cambias de centro)
+
+1. Crea la subcarpeta del curso nuevo dentro de *Notas Educa*.
+2. Pide a Claude *"actualiza mis grupos"*: lee de Educa tus grupos, materias y evaluaciones y los guarda en tu ordenador. Repítelo si te cambian grupos o empiezas una sustitución.
+3. Si en algún grupo no pones tú las notas (docencia compartida), escríbelo en **Ajustes → Extensiones → Educa Navarra → Grupos en los que no pongo notas**, separado por comas (por ejemplo `ESO 2º D, ESO 2º E`). Podrás consultarlo, pero el conector no escribirá en él.
+4. Nombra el grupo en tus ficheros de forma parecida a como sale en Educa, para que Claude los relacione sin dudar.
+
+## 7. El día de la evaluación
 
 1. **Cierra el Excel** antes de pedírselo a Claude, para que lea la versión guardada.
 2. Pide: *"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC."* (o usa el atajo **Meter notas en Educa** del menú **+**).
@@ -91,7 +98,7 @@ Más detalle y normativa: [normativa-evaluacion.md](normativa-evaluacion.md).
 4. Di *"escríbelas"* y **revísalas en la ventana del navegador**.
 5. Solo entonces di *"guarda"*. Cerrar y firmar la evaluación sigue siendo cosa tuya, a mano.
 
-## 7. Privacidad
+## 8. Privacidad
 
 - Guarda los ficheros en tu ordenador o en la nube de tu cuenta educativa, no en carpetas compartidas con otras personas.
 - Usa solo las columnas necesarias (alumno, nota y, si quieres, NIA). No hace falta poner observaciones, teléfonos ni nada más.

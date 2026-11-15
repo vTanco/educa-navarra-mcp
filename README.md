@@ -89,6 +89,8 @@ Escríbele a Claude con tus palabras. Por ejemplo:
 | Quieres… | Dile… |
 |---|---|
 | Meter notas | *"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC."* |
+| Cargar tus grupos (la primera vez) | *"Actualiza mis grupos."* |
+| Ir directo a un grupo | *"Abre las notas de 1ºAB de Tecnología, 2ª evaluación."* |
 | Ver qué ficheros tienes | *"¿Qué ficheros de notas tengo?"* |
 | Consultar sin tocar | *"Enséñame las notas que hay ahora en Educa de ESO 3ºDEFH, Matemáticas. No cambies nada."* |
 | Escribir tras la vista previa | *"Vale, escríbelas."* |
