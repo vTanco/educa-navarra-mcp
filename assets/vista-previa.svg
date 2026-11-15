@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 372" width="960" height="372" role="img" aria-labelledby="t d">
+  <title id="t">Ejemplo de vista previa</title>
+  <desc id="d">Ejemplo con datos inventados de la vista previa que enseña Claude antes de escribir: grupo, escala detectada, resumen y una tabla con nota actual, nota nueva y estado de cada alumno.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .h { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .m { fill: #57606a; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .tdm { fill: #57606a; font-size: 13px; }
+    .new { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .ok { fill: #1a7f37; } .warn { fill: #9a6700; } .bad { fill: #B5121B; } .same { fill: #8c959f; }
+    .row { fill: #f6f8fa; }
+    .pill { fill: #f6f8fa; stroke: #d0d7de; }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="371" rx="12"/>
+
+  <text class="h" x="28" y="40">Vista previa de notas</text>
+  <rect class="pill" x="210" y="23" width="232" height="24" rx="12"/>
+  <text class="m" x="326" y="40" text-anchor="middle">BTO N 1ºA · TIC · 1a Evaluación</text>
+  <text class="m" x="28" y="66">Escala detectada: nota numérica de 0 a 10 (Bachillerato) · 5 alumnos en la tabla</text>
+
+  <text class="b" x="28" y="96">Se escribirán: 3</text>
+  <text class="m" x="150" y="96">(1 por nombre aproximado, revísala)</text>
+  <text class="m" x="400" y="96">Ya estaban igual: 1</text>
+  <text class="m" x="560" y="96">Con problemas: 1</text>
+
+  <line x1="28" y1="116" x2="932" y2="116" stroke="#d0d7de"/>
+  <text class="th" x="28" y="136">ALUMNO EN TU FICHERO</text>
+  <text class="th" x="258" y="136">ALUMNO EN EDUCA</text>
+  <text class="th" x="488" y="136">ACTUAL</text>
+  <text class="th" x="568" y="136">NUEVA</text>
+  <text class="th" x="648" y="136">ESTADO</text>
+  <line x1="28" y1="148" x2="932" y2="148" stroke="#d0d7de"/>
+
+  <text class="td" x="28" y="174">García López, Ana</text>
+  <text class="tdm" x="258" y="174">García López, Ana</text>
+  <text class="tdm" x="488" y="174">—</text>
+  <text class="new" x="568" y="174">7</text>
+  <circle class="ok" cx="654" cy="170" r="4.5"/><text class="td" x="666" y="174">Se escribirá</text>
+
+  <rect class="row" x="28" y="186" width="904" height="36"/>
+  <text class="td" x="28" y="209">Ana Pérez Martínez</text>
+  <text class="tdm" x="258" y="209">Pérez Martínez, Ana</text>
+  <text class="tdm" x="488" y="209">8</text>
+  <text class="new" x="568" y="209">9</text>
+  <circle class="ok" cx="654" cy="205" r="4.5"/><text class="td" x="666" y="209">Se escribirá</text>
+
+  <text class="td" x="28" y="246">Etxeberria, Maite</text>
+  <text class="tdm" x="258" y="246">Etxeberria Goñi, Maite</text>
+  <text class="tdm" x="488" y="246">—</text>
+  <text class="new" x="568" y="246">6</text>
+  <circle class="warn" cx="654" cy="242" r="4.5"/><text class="td" x="666" y="246">Nombre aproximado: solo si lo confirmas</text>
+
+  <rect class="row" x="28" y="258" width="904" height="36"/>
+  <text class="td" x="28" y="281">Ruiz Sanz, Pablo</text>
+  <text class="tdm" x="258" y="281">Ruiz Sanz, Pablo</text>
+  <text class="tdm" x="488" y="281">—</text>
+  <text class="new" x="568" y="281">7,5</text>
+  <circle class="bad" cx="654" cy="277" r="4.5"/><text class="td" x="666" y="281">Nota no válida: no redondea, no la escribe</text>
+
+  <text class="td" x="28" y="318">Navarro Díaz, Lucía</text>
+  <text class="tdm" x="258" y="318">Navarro Díaz, Lucía</text>
+  <text class="tdm" x="488" y="318">5</text>
+  <text class="tdm" x="568" y="318">5</text>
+  <circle class="same" cx="654" cy="314" r="4.5"/><text class="tdm" x="666" y="318">Ya estaba igual</text>
+
+  <line x1="28" y1="336" x2="932" y2="336" stroke="#d0d7de"/>
+  <text class="m" x="28" y="358">Nada se ha cambiado todavía. Datos inventados.</text>
+</svg>

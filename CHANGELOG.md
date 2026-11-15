@@ -2,6 +2,10 @@
 
 Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 
+## 1.1.1 · 2026-11-15
+
+- README renovado: primeros pasos, grupos con nombre parcial, qué se ha probado en el Educa real, diagramas del flujo y de la vista previa.
+
 ## 1.1.0 · 2026-11-15
 
 - Detecta la escala de calificación de cada pantalla en vez de suponerla: términos en ESO y Primaria, número de 0 a 10 en Bachillerato, de 1 a 10 en FP y Apto / No apto donde se pida. Lee las opciones reales del desplegable.
