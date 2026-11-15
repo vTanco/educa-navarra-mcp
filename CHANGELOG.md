@@ -2,7 +2,7 @@
 
 Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 
-## Sin publicar
+## 1.1.1 · 2026-11-15
 
 - README renovado: primeros pasos, grupos con nombre parcial, qué se ha probado en el Educa real, diagramas del flujo y de la vista previa.
 
