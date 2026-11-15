@@ -1,63 +1,82 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/icon.png" width="112" alt="">
+<img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/icon.png" width="104" alt="">
 
 # Educa Navarra · notas con IA
 
-**Pásale tu Excel de notas a Claude y él las mete en Educa por ti.**
-Tú revisas y decides cuándo se guardan.
+**Pásale tu Excel de notas a Claude y él las mete en Educa por ti.**<br>
+Tú revisas la pantalla y decides cuándo se guardan.
 
 [![npm](https://img.shields.io/npm/v/educa-navarra-mcp?color=B5121B&label=npm)](https://www.npmjs.com/package/educa-navarra-mcp)
-[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-1E8E3E)](LICENSE)
+[![Licencia MIT](https://img.shields.io/badge/licencia-MIT-1E8E3E)](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE)
 [![Pruebas](https://github.com/vTanco/educa-navarra-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/vTanco/educa-navarra-mcp/actions/workflows/ci.yml)
 ![Mac · Windows · Linux](https://img.shields.io/badge/Mac%20·%20Windows%20·%20Linux-grey)
 
-[**⬇️ Descargar para Claude Desktop**](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb) · [Cómo se usa](#-cómo-se-usa) · [Prepara tus Excel](docs/BUENAS-PRACTICAS.md) · [Preguntas frecuentes](#-preguntas-frecuentes) · [Aviso legal](AVISO-LEGAL.md)
+**[Descargar para Claude Desktop](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)** ·
+[Instalación](#instalación) ·
+[Primeros pasos](#primeros-pasos) ·
+[Preparar el Excel](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md) ·
+[Qué se ha probado](#qué-se-ha-probado) ·
+[Preguntas](#preguntas-frecuentes)
 
 </div>
 
-> [!IMPORTANT]
-> **Herramienta no oficial.** No está hecha ni respaldada por el Gobierno de Navarra ni por el Departamento de Educación. Usas tu propia cuenta de Educa y eres responsable de las notas que guardes. Lee el [aviso legal](AVISO-LEGAL.md) antes de usarla.
+> **Herramienta no oficial.** No está hecha ni respaldada por el Gobierno de Navarra ni por el Departamento de Educación. Usas tu propia cuenta de Educa y eres responsable de las notas que guardes. Lee el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md) antes de usarla.
 
----
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/flujo.svg" width="100%" alt="Cinco pasos: tu Excel, vista previa, escribe en pantalla sin guardar, tú revisas y pulsa Aceptar solo si lo confirmas.">
+</p>
 
-## ✨ Qué hace
+## Qué hace
 
 | | |
 |---|---|
-| 📄 **Lee tu fichero** | Excel (`.xlsx`) o CSV, con las columnas que tengas. Basta con *alumno* y *nota*. |
-| 🔎 **Cruza nombres** | Empareja tu lista con la de Educa aunque cambien tildes, mayúsculas o el orden de nombre y apellidos. |
-| 👀 **Te enseña una vista previa** | Nota actual, nota nueva y avisos (alumnos que faltan, nombres dudosos, notas fuera de rango) **antes de tocar nada**. |
-| ✍️ **Escribe en pantalla** | Rellena las notas en la ventana de Educa, sin guardar, para que las revises con tus ojos. |
-| ✅ **Guarda solo si tú lo dices** | Pulsa *Aceptar* únicamente cuando lo confirmas en el chat. |
-| 🔒 **Nunca cierra ni firma** | Se niega a pulsar botones de cerrar, firmar, bloquear, borrar o publicar una evaluación. |
+| **Conoce tus grupos** | Lee de Educa tus grupos, agrupamientos, asignaturas y evaluaciones. No hay que escribirlos en ningún ajuste. |
+| **Va directo a la pantalla** | *"Abre 1ºCD, 2ª evaluación"* y abre Calificaciones con el grupo, la materia y la evaluación elegidos. Basta con parte del nombre. |
+| **Encuentra tu fichero** | Busca el Excel o CSV en tu carpeta de notas por evaluación, grupo y materia. También vale adjuntarlo en el chat. |
+| **Cruza los nombres** | Empareja tu lista con la de Educa aunque cambien tildes, mayúsculas o el orden de nombre y apellidos. |
+| **Enseña una vista previa** | Nota actual, nota nueva y avisos, antes de tocar nada. |
+| **Escribe sin guardar** | Rellena las notas en la ventana de Educa para que las revises. |
+| **Guarda solo si lo dices** | Pulsa *Aceptar* únicamente cuando lo confirmas en el chat. |
 
-Pensado para **ESO** (IN · SU · BI · NT · SB), **Bachillerato** (nota sobre 10) y **FP de Grado Medio y Superior**, según la LOMLOE.
+Sirve para **ESO** (IN, SU, BI, NT, SB), **Bachillerato** (nota sobre 10) y **FP de Grado Medio y Superior**: lee la escala de cada pantalla en vez de suponerla.
 
-## 🚀 Instalación
+## Instalación
 
-### Opción A · Claude Desktop (recomendada, sin saber informática)
+Elige una opción. Las tres instalan lo mismo.
+
+| | Para quién | Qué necesitas |
+|---|---|---|
+| **A · Claude Desktop** | La mayoría de docentes | Claude Desktop. Doble clic y listo |
+| **B · Claude Code** | Si ya usas la terminal | Node.js 20 o superior |
+| **C · Otras aplicaciones** | Cursor, VS Code, Windsurf, LM Studio… | Node.js 20 o superior |
+
+### A · Claude Desktop (recomendada)
 
 1. Instala [Claude Desktop](https://claude.ai/download) si no lo tienes.
 2. **[Descarga `educa-navarra-mcp.mcpb`](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)**.
-3. Haz **doble clic** en el fichero descargado. Claude Desktop se abre y te pregunta si quieres instalarlo: pulsa **Instalar**.
-4. Te pedirá tu **usuario y contraseña de Educa**. Son **opcionales**: si los pones, Claude entra solo en Educa; si los dejas vacíos, entras tú en la ventana que se abre. La contraseña se guarda cifrada en tu ordenador. También puedes indicar los **grupos en los que no pones notas** (por ejemplo, si compartes docencia): el conector se negará a escribir en ellos.
-5. Te preguntará también por tu **carpeta de notas**. Deja la que sale (*Documentos/Notas Educa*) y créala si no la tienes: ahí guardarás tus Excel.
+3. Haz **doble clic** en el fichero. Claude Desktop se abre y pregunta si quieres instalarlo: pulsa **Instalar**.
+4. Rellena los ajustes. Todos son opcionales:
 
-Y ya está. No hace falta instalar nada más: usa el **Google Chrome** o **Microsoft Edge** que ya tienes. Si no tienes ninguno, descarga un navegador la primera vez (tarda un par de minutos).
+   | Ajuste | Para qué |
+   |---|---|
+   | Usuario y contraseña de Educa | Para que Claude entre solo. Si los dejas vacíos, entras tú en la ventana que se abre. La contraseña se guarda cifrada en tu ordenador. |
+   | Grupos en los que no pongo notas | Por ejemplo, si compartes docencia: `ESO 2º D, ESO 2º E`. Podrás consultarlos, pero el conector se negará a escribir en ellos. |
+   | Carpeta de notas | Donde guardas tus Excel. Deja la que sale (*Documentos/Notas Educa*) y créala si no existe. |
 
-> [!TIP]
-> Si el doble clic no funciona: en Claude Desktop ve a **Ajustes → Extensiones → Instalar extensión…** y elige el fichero.
+No hace falta instalar nada más: usa el **Google Chrome** o **Microsoft Edge** que ya tienes. Si no hay ninguno, descarga un navegador la primera vez (un par de minutos).
 
-### Opción B · Claude Code (una línea)
+Si el doble clic no funciona, en Claude Desktop ve a **Ajustes → Extensiones → Instalar extensión…** y elige el fichero. Para actualizar a una versión nueva, descarga el fichero otra vez y repite el doble clic.
+
+### B · Claude Code
 
 ```bash
 claude mcp add educa -- npx -y educa-navarra-mcp
 ```
 
-### Opción C · Otras aplicaciones de IA (Cursor, VS Code, Windsurf, LM Studio…)
+### C · Otras aplicaciones compatibles con MCP
 
-Necesitas [Node.js 20 o superior](https://nodejs.org). Añade esto a la configuración de servidores MCP de tu aplicación:
+Añade esto a la configuración de servidores MCP de tu aplicación:
 
 ```json
 {
@@ -71,92 +90,132 @@ Necesitas [Node.js 20 o superior](https://nodejs.org). Añade esto a la configur
 ```
 
 <details>
-<summary>¿Quieres que entre solo en Educa con las opciones B o C?</summary>
+<summary>Entrar solo en Educa con las opciones B o C</summary>
 
-Crea el fichero `credenciales.json` en la carpeta `.educa-mcp` de tu usuario (en Mac: `/Users/tu_usuario/.educa-mcp/`; en Windows: `C:\Users\tu_usuario\.educa-mcp\`):
+Crea el fichero `credenciales.json` en la carpeta `.educa-mcp` de tu usuario (Mac: `/Users/tu_usuario/.educa-mcp/`; Windows: `C:\Users\tu_usuario\.educa-mcp\`):
 
 ```json
 { "usuario": "tu_usuario_de_educa", "clave": "tu_contraseña" }
 ```
 
-No compartas ese fichero ni lo subas a ningún sitio. También vale poner las variables `EDUCA_USER` y `EDUCA_PASSWORD` en el bloque `env` de la configuración.
+No compartas ese fichero ni lo subas a ningún sitio. También valen las variables `EDUCA_USER` y `EDUCA_PASSWORD` en el bloque `env` de la configuración. El resto de ajustes, en [CONFIGURACION.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/CONFIGURACION.md).
 </details>
 
-## 💬 Cómo se usa
+## Primeros pasos
 
-Escríbele a Claude con tus palabras. Por ejemplo:
+Escríbele a Claude con tus palabras. La primera vez:
+
+1. **"Actualiza mis grupos."** Entra en Educa, lee tus grupos y asignaturas y los guarda en tu ordenador. Tarda unos segundos por grupo. Repítelo cuando cambien (curso nuevo, sustitución).
+2. **"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC."** Busca el fichero, abre la pantalla y te enseña la vista previa.
+3. **"Vale, escríbelas."** Rellena la pantalla de Educa sin guardar. Mira la ventana del navegador.
+4. **"Guarda."** Pulsa *Aceptar*. Si algo no te cuadra, no lo digas: pulsa tú *Cancelar* en la ventana de Educa y no se guarda nada.
+
+El cierre y la firma de la evaluación los sigues haciendo tú a mano, como siempre.
+
+### Qué puedes pedirle
 
 | Quieres… | Dile… |
 |---|---|
-| Meter notas | *"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC."* |
-| Cargar tus grupos (la primera vez) | *"Actualiza mis grupos."* |
 | Ir directo a un grupo | *"Abre las notas de 1ºAB de Tecnología, 2ª evaluación."* |
+| Consultar sin tocar | *"Enséñame las notas de ESO 3ºDEFH, Matemáticas. No cambies nada."* |
 | Ver qué ficheros tienes | *"¿Qué ficheros de notas tengo?"* |
-| Consultar sin tocar | *"Enséñame las notas que hay ahora en Educa de ESO 3ºDEFH, Matemáticas. No cambies nada."* |
-| Escribir tras la vista previa | *"Vale, escríbelas."* |
-| Guardar tras revisar en pantalla | *"Guarda."* |
 | Usar otra columna | *"La nota está en la columna Media T1."* |
+| Aceptar un nombre dudoso | *"Sí, Maite Etxeberria es la misma."* |
+| Ver la pantalla | *"Haz una captura de la pantalla."* |
 | Aprender a preparar el Excel | *"¿Cómo preparo mi Excel de notas?"* |
 
-En Claude Desktop tienes además atajos en el menú **+** del chat: **Meter notas en Educa**, **Revisar mis notas en Educa** y **Cómo preparo mi Excel de notas**.
+En Claude Desktop tienes además tres atajos en el menú **+** del chat: **Meter notas en Educa**, **Revisar mis notas en Educa** y **Cómo preparo mi Excel de notas**.
 
-```mermaid
-flowchart LR
-    A["📄 Tu Excel"] --> B["🔐 Entra en Educa"]
-    B --> C["🧭 Va a Calificaciones<br/>grupo · materia · evaluación"]
-    C --> D["👀 Vista previa<br/>no cambia nada"]
-    D --> E["✍️ Escribe en pantalla<br/>sin guardar"]
-    E --> F{"¿Confirmas?"}
-    F -- "Sí" --> G["✅ Pulsa Aceptar"]
-    F -- "No" --> H["↩️ Cancelar"]
-```
+### Nombres de grupo a medias
 
-Verás una ventana del navegador donde ocurre todo: puedes mirar en cualquier momento qué está haciendo. **El cierre y la firma de la evaluación los haces tú a mano**, como siempre.
+No hace falta escribir el nombre exacto de Educa. Si lo que dices encaja con un solo grupo, lo abre; si encaja con varios, te pregunta cuál.
 
-### Tus grupos
+| Tus grupos en Educa | Le dices | Abre |
+|---|---|---|
+| ESO 1ºAB plu, ESO 1ºCD plu, ESO 1ºEF plu | *"1ºCD"* | ESO 1ºCD plu |
+| BTO N 1ºA, BTO N 2ºA | *"BTO N 1"* | BTO N 1ºA |
+| ESO 1ºAB plu, ESO 1ºCD plu, ESO 1ºEF plu | *"ESO 1"* | Te pregunta cuál de los tres |
 
-No hay que configurar los grupos: el conector los lee de Educa. Di *"actualiza mis grupos"* y guardará en tu ordenador la lista de grupos, agrupamientos, asignaturas y evaluaciones; a partir de ahí basta con *"abre las notas de 1ºAB de Tecnología, 2ª evaluación"*. Repítelo cuando cambien tus grupos (curso nuevo, sustitución).
+Lo mismo con la asignatura (*"Tecnología"*) y la evaluación (*"2"*, *"2a"*, *"Final"*). Si el grupo solo tiene una asignatura, no hace falta decirla.
 
-Si en algún grupo no pones tú las notas (docencia compartida), indícalo en el ajuste **Grupos en los que no pongo notas**: podrás consultarlo, pero el conector se negará a escribir en él.
+## Tu fichero de notas
 
-### Sirve para cualquier etapa
+Vale casi cualquier Excel (`.xlsx`) o CSV con una fila por alumno y una columna de nota. Para que Claude lo encuentre solo:
 
-El conector no supone cómo se califica: lee la pantalla de Educa abierta y se adapta. Vale igual si este curso das ESO y el siguiente un ciclo formativo.
-
-| Lo que ofrece Educa | Qué acepta de tu fichero |
-|---|---|
-| Desplegable con términos (ESO, Primaria): IN, SU, BI, NT, SB | El término ("NT", "Notable") o un número entero, que convierte así: 0–4 IN, 5 SU, 6 BI, 7–8 NT, 9–10 SB |
-| Nota tecleada (Bachillerato) | Entero de 0 a 10 |
-| Nota tecleada en un ciclo formativo (FP) | Entero de 1 a 10 |
-| Desplegable Apto / No apto | El término; rechaza números |
-| Otros valores (FPEX, EX, NP...) | Solo si la pantalla los ofrece |
-
-La vista previa dice siempre qué escala ha detectado y nunca redondea decimales. Las pantallas de FP solo se han probado con el simulador. Normativa de referencia en [docs/normativa-evaluacion.md](docs/normativa-evaluacion.md).
-
-### Tu fichero de notas
-
-> [!TIP]
-> Guarda tus Excel en **Documentos/Notas Educa** con nombres como `1EV_BTO-1A_TIC.xlsx` (evaluación_grupo_materia) y Claude los encontrará solo. Todos los consejos en la **[guía de buenas prácticas](docs/BUENAS-PRACTICAS.md)**.
-
-Vale casi cualquier Excel o CSV con una fila por alumno. Por ejemplo:
+| | Recomendación | Ejemplo |
+|---|---|---|
+| **Carpeta** | Una para todo, con subcarpeta por curso | `Documentos/Notas Educa/2026-27/` |
+| **Nombre** | `EVALUACIÓN_GRUPO_MATERIA` | `1EV_BTO-1A_TIC.xlsx` |
+| **Contenido** | Cabeceras en la primera fila, una fila por alumno | *Apellidos · Nombre · Nota* |
 
 | Apellidos | Nombre | Nota |
 |---|---|---|
 | García López | Ana | 7 |
 | Pérez Martínez | Iñigo | 9 |
+| Etxeberria Goñi | Maite | |
 
-- Si tus columnas se llaman de otra forma, díselo a Claude: *"la nota está en la columna Media T1"*.
+- Si tus columnas se llaman de otra forma, díselo: *"la nota está en la columna Media T1"*.
 - Los alumnos con la nota en blanco se saltan.
-- **No redondea por ti**: si una nota no es válida para esa enseñanza, te avisa y no la escribe.
+- **No redondea por ti**: si una nota no vale para esa enseñanza, avisa y no la escribe.
 
-## 🛡️ Privacidad y seguridad
+Todos los consejos, con ejemplos para interinos que cambian de centro, en la **[guía para preparar los Excel](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md)**.
+
+### Así es la vista previa
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/vista-previa.svg" width="100%" alt="Ejemplo de vista previa con datos inventados: tabla con alumno en el fichero, alumno en Educa, nota actual, nota nueva y estado.">
+</p>
+
+Los nombres que solo coinciden en parte se marcan como *aproximados* y no se escriben salvo que lo confirmes. También avisa de alumnos del fichero que no están en Educa y de alumnos de Educa que no tienen nota en el fichero.
+
+## Cualquier etapa
+
+El conector no supone cómo se califica: lee la pantalla de Educa abierta y se adapta. Vale igual si este curso das ESO y el siguiente un ciclo formativo.
+
+| Lo que ofrece Educa | Qué acepta de tu fichero |
+|---|---|
+| Desplegable con términos (ESO): IN, SU, BI, NT, SB | El término (*NT*, *Notable*) o un número entero: 0–4 IN · 5 SU · 6 BI · 7–8 NT · 9–10 SB |
+| Nota tecleada (Bachillerato) | Entero de 0 a 10 |
+| Nota tecleada en un ciclo (FP) | Entero de 1 a 10 |
+| Desplegable Apto / No apto | El término; rechaza números |
+| Otros valores (FPEX, EX, NP…) | Solo si la pantalla los ofrece |
+
+La vista previa dice siempre qué escala ha detectado. Normativa de referencia (LOMLOE y órdenes forales de Navarra) en [normativa-evaluacion.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/normativa-evaluacion.md).
+
+## Qué hace solo y qué necesita tu permiso
+
+| Lo hace solo | Necesita que lo confirmes | No lo hace nunca |
+|---|---|---|
+| Entrar en Educa | Escribir notas en pantalla (tras la vista previa) | Cerrar o firmar una evaluación |
+| Leer grupos, alumnos y notas | Escribir un nombre aproximado | Bloquear, borrar o publicar |
+| Abrir la pantalla de Calificaciones | Pulsar *Aceptar* para guardar | Escribir en tus grupos sin notas |
+| Leer tu Excel | | Visitar webs que no sean de Educa |
+| Hacer capturas de pantalla | | Redondear una nota |
+
+Antes de escribir comprueba que la tabla no ha cambiado (mismo grupo y mismos alumnos) y, después, vuelve a leer cada campo. No toca campos bloqueados, como los de una evaluación ya cerrada.
+
+## Qué se ha probado
+
+Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachillerato, FP y Apto / No apto), con todo el recorrido: entrar, abrir el grupo, vista previa, escribir y guardar. Además, se ha probado en el **Educa real** de un instituto de Navarra con una cuenta de profesor, sin guardar nada:
+
+| | ESO | Bachillerato | FP |
+|---|---|---|---|
+| Entrar y leer la tabla de notas | Probado en Educa real | Probado en Educa real | Solo simulador |
+| Actualizar grupos y abrir un grupo por nombre parcial | Probado en Educa real | Probado en Educa real | Solo simulador |
+| Detectar la escala | Probado en Educa real (términos) | Probado en Educa real (0 a 10) | Solo simulador |
+| Escribir en pantalla, sin guardar | Probado en Educa real | Probado en Educa real | Solo simulador |
+| Pulsar *Aceptar* para guardar | Solo simulador | Solo simulador | Solo simulador |
+
+En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Aceptar* y *Cancelar* y no guarda hasta pulsar uno de los dos; el guardado definitivo se ha dejado para cuando un docente lo haga con sus propias notas. ¿Lo has usado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
+
+## Privacidad
 
 - **Se ejecuta en tu ordenador.** No hay ningún servidor intermedio: el conector maneja un navegador en tu equipo, como harías tú.
 - **Tu contraseña no pasa por el chat.** Se guarda en tu ordenador y solo se escribe en el formulario de acceso de Educa.
 - **Solo visita Educa** (`*.navarra.es`). Cualquier otra dirección se bloquea.
-- **Ojo:** los nombres y notas que aparecen en la vista previa sí pasan por la conversación con la IA. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](AVISO-LEGAL.md).
+- **Ojo:** los nombres y notas que aparecen en la vista previa sí pasan por la conversación con la IA. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
-## ❓ Preguntas frecuentes
+## Preguntas frecuentes
 
 <details>
 <summary><b>¿Puede guardar algo sin que yo me entere?</b></summary>
@@ -173,32 +232,28 @@ Sí. Deja usuario y contraseña vacíos y haz tú ese paso en la ventana que se 
 <details>
 <summary><b>Me cambio de centro o de etapa el curso que viene.</b></summary>
 
-No tienes que hacer nada: el conector trabaja con los grupos y materias que tengas asignados en Educa en cada momento.
+Di *"actualiza mis grupos"* al empezar el curso y listo. La escala de notas la detecta en cada pantalla, así que no hay que configurar nada para pasar de ESO a Bachillerato o a FP.
+</details>
+
+<details>
+<summary><b>No encuentra mi grupo.</b></summary>
+
+Pídele *"actualiza mis grupos"* y vuelve a intentarlo. Si tu nombre encaja con varios grupos, te dirá cuáles y te pedirá el nombre completo.
 </details>
 
 <details>
 <summary><b>Me dice que no encuentra la tabla de notas.</b></summary>
 
-Educa cambia a veces su diseño. Pide a Claude *"haz una captura de la pantalla"* y abre un aviso en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues) **sin datos de alumnos** (tapa los nombres). Los ajustes avanzados están en [docs/CONFIGURACION.md](docs/CONFIGURACION.md).
+Educa cambia a veces su diseño. Pide a Claude *"haz una captura de la pantalla"* y abre un aviso en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues) **sin datos de alumnos** (tapa los nombres). Los ajustes avanzados están en [CONFIGURACION.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/CONFIGURACION.md).
 </details>
 
 <details>
 <summary><b>¿Cómo lo desinstalo?</b></summary>
 
-En Claude Desktop: **Ajustes → Extensiones → Educa Navarra → Desinstalar**. Si quieres borrar también la sesión guardada del navegador, elimina la carpeta `.educa-mcp` de tu usuario.
+En Claude Desktop: **Ajustes → Extensiones → Educa Navarra → Desinstalar**. Si quieres borrar también la sesión guardada del navegador y la lista de grupos, elimina la carpeta `.educa-mcp` de tu usuario.
 </details>
 
-## 📍 Estado
-
-| Enseñanza | Leer notas | Escribir notas |
-|---|---|---|
-| ESO | ✅ probado en Educa real | ✅ probado en Educa real |
-| Bachillerato | ✅ probado en Educa real | 🧪 en pruebas |
-| FP Grado Medio y Superior | 🧪 en pruebas | 🧪 en pruebas |
-
-¿Lo has probado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
-
-## 🧑‍💻 Para desarrolladores
+## Para desarrolladores
 
 ```bash
 git clone https://github.com/vTanco/educa-navarra-mcp.git
@@ -206,12 +261,18 @@ cd educa-navarra-mcp
 npm install
 npm run build
 npm test          # ficheros, conversión de notas y emparejamiento de nombres
-npm run smoke     # prueba completa contra un Educa simulado
+npm run smoke     # recorrido completo contra un Educa simulado
 npm run pack:mcpb # genera build/educa-navarra-mcp.mcpb para Claude Desktop
 ```
 
-Configuración avanzada, variables de entorno y herramientas: [docs/CONFIGURACION.md](docs/CONFIGURACION.md). Cómo publicar una versión: [docs/PUBLICAR.md](docs/PUBLICAR.md).
+| Documento | Contenido |
+|---|---|
+| [CONFIGURACION.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/CONFIGURACION.md) | Herramientas, variables de entorno, fichero de configuración y Educa simulado |
+| [BUENAS-PRACTICAS.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md) | Guía para docentes sobre cómo preparar los Excel |
+| [normativa-evaluacion.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/normativa-evaluacion.md) | Resumen de la normativa de evaluación por etapa |
+| [PUBLICAR.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/PUBLICAR.md) | Cómo sacar una versión (GitHub y npm) |
+| [CHANGELOG.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/CHANGELOG.md) | Cambios de cada versión |
 
 ---
 
-<sub>Licencia [MIT](LICENSE). Proyecto independiente y sin ánimo de lucro, sin relación con el Gobierno de Navarra. "Educa" es el nombre del portal educativo del Gobierno de Navarra y se usa solo para describir con qué funciona esta herramienta.</sub>
+<sub>Licencia [MIT](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE). Proyecto independiente y sin ánimo de lucro, sin relación con el Gobierno de Navarra. "Educa" es el nombre del portal educativo del Gobierno de Navarra y se usa solo para describir con qué funciona esta herramienta.</sub>
