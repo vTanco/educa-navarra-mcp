@@ -4,8 +4,8 @@
   "name": "educa-navarra-mcp",
   "display_name": "Educa Navarra: notas de evaluación",
   "version": "0.0.0",
-  "description": "Mete las notas de evaluación en Educa (Navarra) desde tu Excel o CSV. Nada se guarda sin tu confirmación.",
-  "long_description": "Conector **no oficial** para docentes de la red pública de Navarra. Claude abre Educa en una ventana de Chrome o Edge de tu ordenador, cruza tu Excel o CSV con la lista de alumnos, te enseña una vista previa y escribe las notas en pantalla. Solo pulsa *Aceptar* cuando tú lo confirmas, y nunca cierra, firma ni publica una evaluación.\n\nSirve para ESO (IN/SU/BI/NT/SB), Bachillerato (nota sobre 10) y FP. Todo se ejecuta en tu ordenador: tus credenciales y los datos de tu alumnado no salen de él salvo lo que tú compartas en el chat.\n\nUsuario y contraseña son opcionales: si los dejas vacíos, inicias sesión tú en la ventana que se abre.",
+  "description": "Mete las notas de evaluación en Educa (Navarra) desde tu Excel o CSV, con vista previa. Nada se guarda sin tu confirmación.",
+  "long_description": "Conector **no oficial** para docentes de la red pública de Navarra. Claude abre Educa en una ventana de Chrome o Edge de tu ordenador, busca tu Excel o CSV en tu carpeta de notas, lo cruza con la lista de alumnos, te enseña una vista previa y escribe las notas en pantalla. Solo pulsa *Aceptar* cuando tú lo confirmas, y nunca cierra, firma ni publica una evaluación.\n\n**Qué puedes pedirle** (con tus palabras):\n- *\"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC.\"*\n- *\"¿Qué ficheros de notas tengo?\"*\n- *\"Enséñame las notas que hay ahora en Educa de ESO 3ºDEFH, Matemáticas. No cambies nada.\"*\n- *\"Vale, escríbelas.\"* y, después de revisarlas en la ventana, *\"Guarda.\"*\n- *\"¿Cómo preparo mi Excel de notas?\"*\n\nTambién tienes atajos en el menú **+** del chat: *Meter notas en Educa*, *Revisar mis notas en Educa* y *Cómo preparo mi Excel de notas*.\n\n**Para que todo vaya rodado:** guarda tus Excel en la carpeta de notas (por defecto *Documentos/Notas Educa*) con nombres como `1EV_BTO-1A_TIC.xlsx` (evaluación_grupo_materia), una fila por alumno con columnas *Alumno* y *Nota*. Guía completa: github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md\n\nSirve para ESO (IN/SU/BI/NT/SB), Bachillerato (nota sobre 10) y FP. Todo se ejecuta en tu ordenador; los nombres y notas que se muestran en el chat sí pasan por la IA (lee el aviso legal).\n\nUsuario y contraseña son opcionales: si los dejas vacíos, inicias sesión tú en la ventana que se abre.",
   "author": {
     "name": "vTanco",
     "url": "https://github.com/vTanco"
@@ -23,20 +23,37 @@
     "entry_point": "dist/index.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/dist/index.js"],
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
       "env": {
         "EDUCA_USER": "${user_config.usuario}",
-        "EDUCA_PASSWORD": "${user_config.clave}"
+        "EDUCA_PASSWORD": "${user_config.clave}",
+        "EDUCA_NOTES_DIR": "${user_config.carpeta_notas}"
       }
     }
   },
   "tools": [],
   "tools_generated": false,
-  "keywords": ["educa", "navarra", "notas", "calificaciones", "evaluación", "docentes", "lomloe"],
+  "keywords": [
+    "educa",
+    "navarra",
+    "notas",
+    "calificaciones",
+    "evaluación",
+    "docentes",
+    "lomloe"
+  ],
   "license": "MIT",
   "compatibility": {
-    "platforms": ["darwin", "win32", "linux"],
-    "runtimes": { "node": ">=20.3.0" }
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=20.3.0"
+    }
   },
   "user_config": {
     "usuario": {
@@ -51,6 +68,40 @@
       "description": "Se guarda cifrada en tu ordenador y solo se escribe en el formulario de acceso de Educa. Nunca pasa por el chat.",
       "sensitive": true,
       "required": false
+    },
+    "carpeta_notas": {
+      "type": "directory",
+      "title": "Carpeta de notas",
+      "description": "Donde guardas tus Excel o CSV de notas. Claude buscará aquí los ficheros. Si no existe, créala.",
+      "default": "${HOME}/Documents/Notas Educa",
+      "required": false
     }
-  }
+  },
+  "prompts": [
+    {
+      "name": "meter_notas",
+      "description": "Mete las notas de un grupo y materia desde tu Excel, con vista previa antes de guardar.",
+      "arguments": [
+        "grupo",
+        "materia",
+        "evaluacion"
+      ],
+      "text": "Quiero meter en Educa las notas de ${arguments.evaluacion} de ${arguments.grupo}, ${arguments.materia}. Busca el fichero en mi carpeta de notas, enséñame la vista previa y no guardes nada hasta que yo te lo diga."
+    },
+    {
+      "name": "revisar_notas",
+      "description": "Lee las notas que hay ahora en Educa para un grupo y materia, sin cambiar nada.",
+      "arguments": [
+        "grupo",
+        "materia"
+      ],
+      "text": "Abre Educa y enséñame las notas que hay ahora en ${arguments.grupo}, ${arguments.materia}. Solo lectura: no cambies nada."
+    },
+    {
+      "name": "preparar_excel",
+      "description": "Consejos para preparar el fichero de notas y dónde guardarlo.",
+      "text": "Explícame en pocos pasos cómo debo preparar y guardar mis Excel de notas para que el conector de Educa los encuentre y los entienda sin problemas."
+    }
+  ],
+  "prompts_generated": false
 }

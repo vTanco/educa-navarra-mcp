@@ -10,6 +10,14 @@ Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 - `educa_select_filter` ya no escribe en buscadores ajenos al desplegable ni deja el filtro escrito cuando la opción no existe.
 - Nuevo resumen de la normativa de evaluación en `docs/normativa-evaluacion.md`.
 
+## Sin publicar
+
+- Guía de buenas prácticas para preparar los Excel de notas ([docs/BUENAS-PRACTICAS.md](docs/BUENAS-PRACTICAS.md)).
+- Carpeta de notas configurable (por defecto *Documentos/Notas Educa*) y herramienta `educa_list_grade_files` para que Claude encuentre el fichero por evaluación, grupo y materia.
+- Atajos en el menú de Claude: *Meter notas en Educa*, *Revisar mis notas en Educa* y *Cómo preparo mi Excel de notas*.
+- Instrucciones de uso para Claude: flujo, confirmación antes de guardar y resumen de la guía.
+- Ficha de la extensión con ejemplos de frases.
+
 ## 1.0.0 · 2026-11-12
 
 Primera versión pública.
