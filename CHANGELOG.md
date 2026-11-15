@@ -11,6 +11,11 @@ Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 - Nuevas herramientas `educa_refresh_groups` ("actualiza mis grupos") y `educa_open_group` ("abre las notas de 1ºAB de Tecnología, 2ª evaluación"): la lista de grupos se lee de Educa y se guarda en el ordenador.
 - Nuevo ajuste opcional "Grupos en los que no pongo notas": el conector se niega a preparar, escribir o guardar notas en esos grupos.
 - Nuevo resumen de la normativa de evaluación en `docs/normativa-evaluacion.md`.
+- Guía de buenas prácticas para preparar los Excel de notas ([docs/BUENAS-PRACTICAS.md](docs/BUENAS-PRACTICAS.md)).
+- Carpeta de notas configurable (por defecto *Documentos/Notas Educa*) y herramienta `educa_list_grade_files` para que Claude encuentre el fichero por evaluación, grupo y materia.
+- Atajos en el menú de Claude: *Meter notas en Educa*, *Revisar mis notas en Educa* y *Cómo preparo mi Excel de notas*.
+- Instrucciones de uso para Claude: flujo, confirmación antes de guardar y resumen de la guía.
+- Ficha de la extensión con ejemplos de frases.
 
 ## 1.0.0 · 2026-11-12
 

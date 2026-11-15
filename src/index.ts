@@ -22,6 +22,7 @@ import * as z from "zod/v4";
 import { CATALOG_FILE, findByName, loadCatalog, saveCatalog, type GroupCatalog, type GroupEntry } from "./groups.js";
 import { EducaBrowser, FieldGone } from "./browser.js";
 import { loadConfig, PROJECT_DIR } from "./config.js";
+import { registerGuide, SERVER_INSTRUCTIONS } from "./guide.js";
 import { blockedGroup, buildPlan, describeScale, normalize as normalizeName, parseGradesFile, summarizePlan, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
 
 const CHARACTER_LIMIT = 25_000;
@@ -134,7 +135,8 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale):
 // ---------- Servidor ----------
 
 function createServer(): McpServer {
-  const server = new McpServer({ name: "educa-mcp", version: PACKAGE_VERSION });
+  const server = new McpServer({ name: "educa-mcp", version: PACKAGE_VERSION }, { instructions: SERVER_INSTRUCTIONS });
+  registerGuide(server);
 
   server.registerTool(
     "educa_login",

@@ -12,12 +12,17 @@ La mayoría de docentes **no necesitan nada de esto**: el conector funciona tal 
 | `educa_open_group` | Abrir directamente las notas de un grupo, asignatura y evaluación | No |
 | `educa_navigate`, `educa_click`, `educa_select_filter` | Moverse por Educa hasta la pantalla de calificaciones | No (nunca pulsa cerrar, firmar, borrar…) |
 | `educa_inspect_page`, `educa_dump_html`, `educa_screenshot` | Ver qué hay en la página | No |
+| `educa_list_grade_files` | Ver los Excel y CSV de la carpeta de notas | No |
 | `educa_load_grades_file` | Leer tu Excel o CSV | No |
 | `educa_read_grade_sheet` | Leer la tabla de notas de Educa | No |
 | `educa_preview_grades` | Cruzar tu fichero con Educa y enseñar la vista previa | No |
 | `educa_fill_grades` | Escribir las notas en pantalla, sin guardar | Solo en pantalla |
 | `educa_save_grades` | Pulsar *Aceptar* (exige `confirm: true`) | **Sí** |
 | `educa_close_browser` | Cerrar la ventana del navegador | No |
+
+### Atajos (prompts)
+
+El servidor ofrece tres prompts que Claude Desktop muestra en el menú **+**: `meter_notas` (grupo, materia, evaluación), `revisar_notas` (grupo, materia) y `preparar_excel`. Además envía unas instrucciones de uso a Claude (flujo, reglas de seguridad y resumen de la [guía de buenas prácticas](BUENAS-PRACTICAS.md)); están en `src/guide.ts`.
 
 ### Qué comprueba antes de escribir
 
@@ -39,6 +44,7 @@ La sesión de Educa se guarda en un perfil propio del navegador (no toca tu perf
 |---|---|
 | `EDUCA_USER`, `EDUCA_PASSWORD` | Inicio de sesión automático |
 | `EDUCA_NO_GRADE_GROUPS` | Grupos en los que no pones notas, separados por comas (p. ej. `ESO 2º D, ESO 2º E`). El conector se niega a escribir o guardar en ellos. En el fichero de configuración: `noGradeGroups` |
+| `EDUCA_NOTES_DIR` | Carpeta de notas que lista `educa_list_grade_files` (por defecto `~/Documents/Notas Educa`) |
 | `EDUCA_CREDENTIALS_FILE` | Ruta a un fichero `{"usuario": "...", "clave": "..."}` (por defecto `~/.educa-mcp/credenciales.json`) |
 | `EDUCA_BROWSER_CHANNEL` | `chrome`, `msedge` o `chromium` (el de Playwright) |
 | `EDUCA_BROWSER_PATH` | Ruta a un ejecutable de Chrome/Chromium concreto |
