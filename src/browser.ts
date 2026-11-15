@@ -272,6 +272,103 @@ export class EducaBrowser {
     throw new Error(`No encuentro ningún desplegable cuyo nombre o etiqueta contenga "${fieldHint}". Usa educa_inspect_page para ver los campos.`);
   }
 
+  // ---------- Selector de grupo, asignatura y evaluación (Educa-Gestión) ----------
+
+  private groupSelect(page: Page, kind: "grupo" | "agrupamiento"): Locator {
+    return page.locator(`[role=dialog] p-select[placeholder="Seleccione un ${kind}"]`).first();
+  }
+
+  /** Abre el diálogo de Educa-Gestión que pide grupo o agrupamiento y asignatura. */
+  async openGroupSelector(): Promise<void> {
+    let page = await this.page();
+    page = await this.goto(new URL(this.config.gradesScreen.path, page.url()).toString());
+    await settle(page);
+    const selector = this.groupSelect(page, "grupo");
+    if (!(await selector.isVisible().catch(() => false))) {
+      // Aviso de "Última conexión" que tapa el menú al entrar
+      const notice = page.locator("[role=dialog] button[data-pc-name=pcclosebutton]").filter({ visible: true }).first();
+      if ((await notice.count()) > 0) await notice.click().catch(() => undefined);
+      for (const entry of this.config.gradesScreen.menu) await this.click({ text: entry });
+    }
+    await selector.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {
+      throw new Error(`No se ha abierto el selector de grupo de Educa tras pulsar ${this.config.gradesScreen.menu.join(" → ")}. Usa educa_inspect_page para ver dónde está el navegador; si el menú de tu centro es distinto, ajusta gradesScreen.menu en la configuración.`);
+    });
+  }
+
+  /** Abre un desplegable PrimeNG, lee sus opciones y lo vuelve a cerrar sin elegir nada. */
+  private async overlayOptions(page: Page, trigger: Locator): Promise<string[]> {
+    await trigger.click();
+    const items = page.locator(".p-select-overlay li[role=option]").filter({ visible: true });
+    await items.first().waitFor({ state: "visible", timeout: 3000 }).catch(() => undefined);
+    const texts = (await items.allInnerTexts().catch(() => [] as string[])).map(t => t.replace(/\s+/g, " ").trim()).filter(Boolean);
+    if ((await items.count()) > 0) await trigger.click().catch(() => undefined); // se cierra con su propio botón (Escape cerraría el diálogo)
+    await page.waitForTimeout(250);
+    return [...new Set(texts)];
+  }
+
+  private async pickOverlayOption(page: Page, trigger: Locator, option: string): Promise<void> {
+    await trigger.click();
+    const item = page.locator(".p-select-overlay li[role=option]").filter({ visible: true }).filter({ hasText: new RegExp(`^\\s*${option.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`) }).first();
+    try {
+      await item.click({ timeout: 5000 });
+    } catch {
+      await trigger.click().catch(() => undefined);
+      throw new Error(`El desplegable de Educa no ofrece la opción "${option}".`);
+    }
+    await settle(page, 500);
+  }
+
+  /** Con el selector abierto: nombres de los grupos y agrupamientos del docente. */
+  async listGroupNames(): Promise<{ grupo: string[]; agrupamiento: string[] }> {
+    const page = await this.page();
+    const out = { grupo: [] as string[], agrupamiento: [] as string[] };
+    for (const kind of ["grupo", "agrupamiento"] as const) {
+      const select = this.groupSelect(page, kind);
+      if ((await select.count()) > 0 && (await select.isVisible().catch(() => false))) out[kind] = await this.overlayOptions(page, select);
+    }
+    return out;
+  }
+
+  /** Con el selector abierto: elige el grupo y devuelve las asignaturas que lista Educa para él. */
+  async subjectsOfGroup(kind: "grupo" | "agrupamiento", name: string): Promise<string[]> {
+    const page = await this.page();
+    await this.pickOverlayOption(page, this.groupSelect(page, kind), name);
+    const items = page.locator("[role=dialog] p-listbox li[role=option]").filter({ visible: true });
+    await items.first().waitFor({ state: "visible", timeout: 4000 }).catch(() => undefined);
+    return [...new Set((await items.allInnerTexts().catch(() => [] as string[])).map(t => t.replace(/\s+/g, " ").trim()).filter(Boolean))];
+  }
+
+  /** Abre la pantalla de notas de un grupo y asignatura (nombres exactos, tal como los da Educa). */
+  async openSubject(kind: "grupo" | "agrupamiento", group: string, subject: string): Promise<void> {
+    await this.openGroupSelector();
+    const page = await this.page();
+    const subjects = await this.subjectsOfGroup(kind, group);
+    if (!subjects.includes(subject)) throw new Error(`Educa no lista la asignatura "${subject}" en ${group}. Asignaturas: ${subjects.join(" / ") || "(ninguna)"}`);
+    await page.locator("[role=dialog] p-listbox li[role=option]").filter({ visible: true }).filter({ hasText: new RegExp(`^\\s*${subject.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`) }).first().click();
+    await settle(page);
+    await page.locator(".listadoCalificaciones .elementoLista").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => undefined);
+  }
+
+  private evaluationSelect(page: Page): Locator {
+    return page.locator('p-select[placeholder="evl"]').first();
+  }
+
+  /** Evaluación elegida y evaluaciones disponibles en la pantalla de notas abierta. */
+  async evaluations(): Promise<{ current: string; options: string[] }> {
+    const page = await this.page();
+    const select = this.evaluationSelect(page);
+    if ((await select.count()) === 0 || !(await select.isVisible().catch(() => false))) return { current: "", options: [] };
+    const options = await this.overlayOptions(page, select);
+    const current = ((await select.locator("[role=combobox]").first().innerText().catch(() => "")) || "").replace(/\s+/g, " ").trim();
+    return { current, options };
+  }
+
+  async selectEvaluation(option: string): Promise<void> {
+    const page = await this.page();
+    await this.pickOverlayOption(page, this.evaluationSelect(page), option);
+    await settle(page);
+  }
+
   // ---------- Tabla de notas ----------
 
   /**

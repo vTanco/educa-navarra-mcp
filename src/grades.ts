@@ -255,6 +255,19 @@ export function detectStage(context: string | undefined): Stage {
   return "desconocida";
 }
 
+/**
+ * Devuelve el grupo de la lista "no pongo notas" al que pertenece la pantalla, o null.
+ * Compara palabras completas sin tildes ni mayúsculas; basta el principio del nombre del grupo.
+ */
+export function blockedGroup(context: string | undefined, noGradeGroups: string[]): string | null {
+  const text = ` ${normalize(context ?? "")} `;
+  for (const group of noGradeGroups) {
+    const wanted = normalize(group);
+    if (wanted && text.includes(` ${wanted} `)) return group;
+  }
+  return null;
+}
+
 /** Términos de calificación con sus formas habituales (código y palabra completa). */
 const TERMS: Record<string, string[]> = {
   IN: ["in", "insuficiente"],

@@ -29,6 +29,7 @@
       "env": {
         "EDUCA_USER": "${user_config.usuario}",
         "EDUCA_PASSWORD": "${user_config.clave}",
+        "EDUCA_NO_GRADE_GROUPS": "${user_config.grupos_sin_notas}",
         "EDUCA_NOTES_DIR": "${user_config.carpeta_notas}"
       }
     }
@@ -67,6 +68,12 @@
       "title": "Contraseña de Educa (opcional)",
       "description": "Se guarda cifrada en tu ordenador y solo se escribe en el formulario de acceso de Educa. Nunca pasa por el chat.",
       "sensitive": true,
+      "required": false
+    },
+    "grupos_sin_notas": {
+      "type": "string",
+      "title": "Grupos en los que no pongo notas (opcional)",
+      "description": "Escribe los grupos tal como aparecen en Educa, separados por comas. Ejemplo: ESO 2º D, ESO 2º E. El conector se negará a escribir o guardar notas en ellos. Útil si compartes docencia y las notas las pone otra persona.",
       "required": false
     },
     "carpeta_notas": {
