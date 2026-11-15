@@ -18,7 +18,7 @@ El enlace de descarga del README (`releases/latest/download/educa-navarra-mcp.mc
 Para que GitHub publique en npm sin guardar contraseñas ni tokens:
 
 1. Entra en [npmjs.com](https://www.npmjs.com) → paquete **educa-navarra-mcp** → **Settings** → **Trusted publishing**.
-2. Elige **GitHub Actions** y rellena: organización o usuario `vTanco`, repositorio `educa-navarra-mcp`, workflow `release.yml`.
+2. Elige **GitHub Actions** y rellena: organización o usuario `vTanco`, repositorio `educa-navarra-mcp`, workflow `release.yml`, entorno vacío. Deja sin marcar *Allow npm publish* y *Allow npm dist-tag*: el workflow usa `npm stage publish`, así que cada versión espera a que la apruebes con tu segundo factor.
 3. Guarda. Desde entonces, cada etiqueta `v*` publica sola.
 
 npm solo deja configurar esto cuando el paquete ya existe, así que la **primera publicación** se hace a mano desde el ordenador de la persona mantenedora:
