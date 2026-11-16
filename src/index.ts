@@ -11,6 +11,9 @@
  *   4. educa_fill_grades      -> escribe las notas en los campos (no guarda)
  *   5. educa_save_grades      -> pulsa Guardar, solo con confirmación expresa
  *
+ * Partes de convivencia: educa_preview_incident -> educa_fill_incident -> educa_save_incident
+ * (ver incident-tools.ts).
+ *
  * Solo stdio: controla un navegador en el ordenador del profesor.
  */
 import { randomUUID } from "node:crypto";
@@ -23,6 +26,7 @@ import { CATALOG_FILE, findByName, loadCatalog, saveCatalog, type GroupCatalog, 
 import { EducaBrowser, FieldGone } from "./browser.js";
 import { loadConfig, PROJECT_DIR } from "./config.js";
 import { registerGuide, SERVER_INSTRUCTIONS } from "./guide.js";
+import { registerIncidentTools } from "./incident-tools.js";
 import { blockedGroup, buildPlan, cleanComment, describeScale, hasWork, normalize as normalizeName, parseGradesFile, sameValue, summarizeComments, summarizePlan, type CommentStatus, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
 
 const CHARACTER_LIMIT = 25_000;
@@ -170,6 +174,7 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale):
 function createServer(): McpServer {
   const server = new McpServer({ name: "educa-mcp", version: PACKAGE_VERSION }, { instructions: SERVER_INSTRUCTIONS });
   registerGuide(server);
+  const incidentTools = registerIncidentTools(server, browser, config, requireLogin);
 
   server.registerTool(
     "educa_login",
@@ -712,6 +717,7 @@ IMPORTANTE: llama solo cuando el profesor haya dicho expresamente que guarde, y 
       await browser.close();
       plans.clear();
       lastFilledPlan = null;
+      incidentTools.reset();
       return text("Navegador cerrado.");
     }
   );

@@ -4,8 +4,8 @@
   "name": "educa-navarra-mcp",
   "display_name": "Educa Navarra: notas de evaluación",
   "version": "0.0.0",
-  "description": "Mete las notas de evaluación en Educa (Navarra) desde tu Excel o CSV, con vista previa. Nada se guarda sin tu confirmación.",
-  "long_description": "Conector **no oficial** para docentes de la red pública de Navarra. Claude abre Educa en una ventana de Chrome o Edge de tu ordenador, busca tu Excel o CSV en tu carpeta de notas, lo cruza con la lista de alumnos, te enseña una vista previa y escribe las notas en pantalla (y, si tu fichero tiene columna *Observaciones*, el comentario para las familias de cada alumno). Solo pulsa *Aceptar* cuando tú lo confirmas, y nunca cierra, firma ni publica una evaluación.\n\n**Qué puedes pedirle** (con tus palabras):\n- *\"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC.\"*\n- *\"Actualiza mis grupos.\"* (la primera vez y cuando cambien tus grupos)\n- *\"Abre las notas de 1ºAB de Tecnología, 2ª evaluación.\"*\n- *\"¿Qué ficheros de notas tengo?\"*\n- *\"Enséñame las notas que hay ahora en Educa de ESO 3ºDEFH, Matemáticas. No cambies nada.\"*\n- *\"Vale, escríbelas.\"* y, después de revisarlas en la ventana, *\"Guarda.\"*\n- *\"¿Cómo preparo mi Excel de notas?\"*\n\nTambién tienes atajos en el menú **+** del chat: *Meter notas en Educa*, *Revisar mis notas en Educa* y *Cómo preparo mi Excel de notas*.\n\n**Para que todo vaya rodado:** guarda tus Excel en la carpeta de notas (por defecto *Documentos/Notas Educa*) con nombres como `1EV_BTO-1A_TIC.xlsx` (evaluación_grupo_materia), una fila por alumno con columnas *Alumno* y *Nota* (y, si quieres, *Observaciones*). Guía completa: github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md\n\nSirve para ESO (IN/SU/BI/NT/SB), Bachillerato (nota sobre 10) y FP. Todo se ejecuta en tu ordenador; los nombres y notas que se muestran en el chat sí pasan por la IA (lee el aviso legal).\n\nUsuario y contraseña son opcionales: si los dejas vacíos, inicias sesión tú en la ventana que se abre.",
+  "description": "Mete las notas de evaluación en Educa (Navarra) desde tu Excel o CSV y redacta partes de convivencia, con vista previa. Nada se guarda sin tu confirmación.",
+  "long_description": "Conector **no oficial** para docentes de la red pública de Navarra. Claude abre Educa en una ventana de Chrome o Edge de tu ordenador, busca tu Excel o CSV en tu carpeta de notas, lo cruza con la lista de alumnos, te enseña una vista previa y escribe las notas en pantalla (y, si tu fichero tiene columna *Observaciones*, el comentario para las familias de cada alumno). Solo pulsa *Aceptar* cuando tú lo confirmas, y nunca cierra, firma ni publica una evaluación.\n\nTambién **redacta partes de convivencia**: le cuentas lo que ha pasado, prepara el informe con tono formal, propone el tipo de conducta según el Decreto Foral 47/2010 y, tras tu visto bueno, lo rellena en Educa-Gestión → Convivencia y lo guarda cuando se lo dices.\n\n**Qué puedes pedirle** (con tus palabras):\n- *\"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC.\"*\n- *\"Actualiza mis grupos.\"* (la primera vez y cuando cambien tus grupos)\n- *\"Abre las notas de 1ºAB de Tecnología, 2ª evaluación.\"*\n- *\"¿Qué ficheros de notas tengo?\"*\n- *\"Enséñame las notas que hay ahora en Educa de ESO 3ºDEFH, Matemáticas. No cambies nada.\"*\n- *\"Vale, escríbelas.\"* y, después de revisarlas en la ventana, *\"Guarda.\"*\n- *\"¿Cómo preparo mi Excel de notas?\"*\n- *\"Ponle un parte a Iker Muro, de 3º D: hoy en Tecnología se ha negado a guardar el móvil.\"*\n\nTambién tienes atajos en el menú **+** del chat: *Meter notas en Educa*, *Revisar mis notas en Educa*, *Cómo preparo mi Excel de notas* y *Poner un parte de convivencia*.\n\n**Para que todo vaya rodado:** guarda tus Excel en la carpeta de notas (por defecto *Documentos/Notas Educa*) con nombres como `1EV_BTO-1A_TIC.xlsx` (evaluación_grupo_materia), una fila por alumno con columnas *Alumno* y *Nota* (y, si quieres, *Observaciones*). Guía completa: github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md\n\nSirve para ESO (IN/SU/BI/NT/SB), Bachillerato (nota sobre 10) y FP. Todo se ejecuta en tu ordenador; los nombres y notas que se muestran en el chat sí pasan por la IA (lee el aviso legal).\n\nUsuario y contraseña son opcionales: si los dejas vacíos, inicias sesión tú en la ventana que se abre.",
   "author": {
     "name": "vTanco",
     "url": "https://github.com/vTanco"
@@ -103,6 +103,16 @@
         "materia"
       ],
       "text": "Abre Educa y enséñame las notas que hay ahora en ${arguments.grupo}, ${arguments.materia}. Solo lectura: no cambies nada."
+    },
+    {
+      "name": "poner_parte",
+      "description": "Redacta un parte a partir de lo que cuentes y lo registra en Educa tras tu visto bueno.",
+      "arguments": [
+        "grupo",
+        "alumno",
+        "que_paso"
+      ],
+      "text": "Quiero poner un parte en Educa a ${arguments.alumno}, de ${arguments.grupo}. Lo que ha pasado: ${arguments.que_paso}\n\nRedáctalo con tono formal, propón el tipo de conducta y enséñame la vista previa. No guardes nada hasta que yo te lo diga."
     },
     {
       "name": "preparar_excel",

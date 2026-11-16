@@ -10,6 +10,7 @@ import { join, resolve } from "node:path";
 import { Client } from "@modelcontextprotocol/client";
 import { getDefaultEnvironment, StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { startMock, saved } from "./mock-server.js";
+import { savedIncidents } from "./mock-convivencia.js";
 
 const { server: mock, url } = await startMock();
 const home = mkdtempSync(join(tmpdir(), "educa-mcp-"));
@@ -49,9 +50,9 @@ async function call(name: string, args: Record<string, unknown> = {}, expectErro
 
 try {
   const { tools } = await client.listTools();
-  assert.equal(tools.length, 17);
+  assert.equal(tools.length, 20);
   const { prompts } = await client.listPrompts();
-  assert.deepEqual(prompts.map(p => p.name).sort(), ["meter_notas", "preparar_excel", "revisar_notas"]);
+  assert.deepEqual(prompts.map(p => p.name).sort(), ["meter_notas", "poner_parte", "preparar_excel", "revisar_notas"]);
   assert.match(client.getInstructions() ?? "", /educa_save_grades/);
   assert.match(textOf(await call("educa_list_grade_files", { filter: "notas" })), /notas\.csv/);
 
@@ -201,6 +202,41 @@ try {
   assert.match(textOf(await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }] }, true)), /no pones notas/);
   await call("educa_navigate", { url: url + "cuaderno?nombre=" + encodeURIComponent("ESO 2º DE") });
   assert.equal(((await call("educa_read_grade_sheet", { response_format: "json" })).structuredContent as { no_grades_group: boolean }).no_grades_group, false);
+
+  // --- Partes de convivencia: vista previa (no escribe), rellenar (no guarda) y guardar con confirmación
+  const relato = "Durante la sesión de Tecnología, el alumno se ha dirigido al profesor con un tono despectivo y se ha negado a guardar el teléfono móvil tras dos indicaciones.";
+  assert.match(textOf(await call("educa_preview_incident", { group: "3ºDEFH", student: "Iker", report: relato }, true)), /varios alumnos/);
+  assert.match(textOf(await call("educa_preview_incident", { group: "3ºDEFH", student: "Iker Muro", report: "Se portó mal." }, true)), /demasiado corto/);
+  assert.match(textOf(await call("educa_preview_incident", { group: "3ºDEFH", student: "Iker Muro", report: relato, date: "31/02/2026" }, true)), /fecha no se entiende/);
+  const sinConducta = textOf(await call("educa_preview_incident", { group: "3ºDEFH", student: "Iker Muro", report: relato }));
+  assert.match(sinConducta, /Falta el tipo de conducta/);
+  assert.match(sinConducta, /FALTA DE RESPETO \(art\. 14 g\)/);
+  assert.match(sinConducta, /\*\*Conductas perjudiciales\*\*[\s\S]*INSUBORDINACIÓN \(art\. 17\.1 j\)/);
+  assert.match(sinConducta, /Muro Etxeberria, Iker \(ESO 3ºDEFH cd\)/);
+  await call("educa_preview_incident", { group: "4º Z", student: "Iker Muro", report: relato }, true);
+  await call("educa_save_incident", { confirm: true }, true); // nada rellenado todavía
+  const prev = await call("educa_preview_incident", { group: "3ºDEFH", student: "muro iker", report: relato, conduct: "art. 14 g", family_contacted: true, measure: "tareas", response_format: "json" });
+  const inc = prev.structuredContent as { incident_id: string; conduct: { label: string; category: string }; normative: { ref: string } };
+  assert.deepEqual([inc.conduct.label, inc.conduct.category, inc.normative.ref], ["FALTA DE RESPETO", "Conductas contrarias", "art. 14 g)"]);
+  const filled = textOf(await call("educa_fill_incident", { incident_id: inc.incident_id }));
+  assert.match(filled, /Todavía no se ha guardado/);
+  assert.match(filled, /12:40 : 13:35 - Tecnología/);
+  assert.match(filled, /Propuesta de medida: REALIZACIÓN TAREAS/);
+  assert.equal(savedIncidents.length, 0, "rellenar no guarda");
+  assert.match(textOf(await call("educa_save_incident", { confirm: true })), /confirma que se ha guardado/);
+  const hoy = new Date();
+  const fechaHoy = `${String(hoy.getDate()).padStart(2, "0")}/${String(hoy.getMonth() + 1).padStart(2, "0")}/${hoy.getFullYear()}`;
+  assert.deepEqual(savedIncidents[0], { grupo: "ESO 3ºDEFH cd", alumno: "Muro Etxeberria, Iker", fecha: fechaHoy, espacio: "Sesión presencial", sesion: "12:40 : 13:35 - Tecnología y Digitalización ES3", relato, familia: true, conducta: "FALTA DE RESPETO", medida: "REALIZACIÓN TAREAS", enviado: false });
+  // Otro mes, recreo (sin sesión), conducta gravemente perjudicial y "Guardar y enviar"
+  const antes = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 32);
+  const fechaAntes = `${String(antes.getDate()).padStart(2, "0")}/${String(antes.getMonth() + 1).padStart(2, "0")}/${antes.getFullYear()}`;
+  const p2 = (await call("educa_preview_incident", { group: "ESO 3º D", student: "Leire Arana", report: relato, conduct: "insubordinacion", date: fechaAntes, place: "recreo", response_format: "json" })).structuredContent as { incident_id: string };
+  await call("educa_fill_incident", { incident_id: p2.incident_id });
+  const sent = textOf(await call("educa_save_incident", { confirm: true, send: true }));
+  assert.match(sent, /Guardar y enviar/);
+  assert.match(sent, /Paso de Educa: Envío/);
+  assert.equal(savedIncidents[1].grupo, "ESO 3º D", "el nombre exacto gana a una coincidencia parcial de otro apartado");
+  assert.deepEqual([savedIncidents[1].fecha, savedIncidents[1].espacio, savedIncidents[1].sesion, savedIncidents[1].conducta, savedIncidents[1].enviado], [fechaAntes, "Recreo", "", "INSUBORDINACIÓN", true]);
 
   await call("educa_close_browser");
   console.error("\n✅ Prueba superada");

@@ -530,7 +530,7 @@ export class FieldGone extends Error {
   }
 }
 
-async function settle(page: Page, extraMs = 800): Promise<void> {
+export async function settle(page: Page, extraMs = 800): Promise<void> {
   await page.waitForLoadState("domcontentloaded").catch(() => undefined);
   await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
   await page.waitForTimeout(extraMs);
@@ -758,7 +758,7 @@ function markSelectsMatching(hint: string): string[] {
   return keys;
 }
 
-function collectMessages(): string[] {
+export function collectMessages(): string[] {
   const clean = (s: string | null) => (s ?? "").replace(/\s+/g, " ").trim();
   const nodes = [...document.querySelectorAll(".alert, .mensaje, .message, .error, .aviso, .info, .success, [role=alert], [role=status], .ui-messages, .feedback, .toast")];
   const out = nodes.map(n => clean(n.textContent)).filter(t => t && t.length < 400);

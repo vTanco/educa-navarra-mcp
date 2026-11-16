@@ -11,6 +11,7 @@ import { homedir } from "node:os";
 import { basename, extname, join, relative } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod/v4";
+import { INCIDENT_INSTRUCTIONS } from "./incident-tools.js";
 
 /** Carpeta donde el docente guarda sus Excel/CSV de notas. */
 export function notesDir(): string {
@@ -19,7 +20,7 @@ export function notesDir(): string {
   return join(homedir(), "Documents", "Notas Educa");
 }
 
-export const SERVER_INSTRUCTIONS = `Conector no oficial para meter notas de evaluación en Educa (Gobierno de Navarra) desde el Excel o CSV del docente. Quien lo usa suele ser un docente sin conocimientos técnicos: háblale claro y en español, sin jerga.
+export const SERVER_INSTRUCTIONS = `Conector no oficial para meter notas de evaluación en Educa (Gobierno de Navarra) desde el Excel o CSV del docente, y para redactar y registrar partes de convivencia. Quien lo usa suele ser un docente sin conocimientos técnicos: háblale claro y en español, sin jerga.
 
 Flujo:
 1. Averigua grupo, materia y evaluación. Si falta algo, pregúntalo antes de abrir Educa.
@@ -37,7 +38,9 @@ Reglas:
 - Minimiza los datos personales en el chat: no pidas capturas ni volcados de la página si no hacen falta.
 - Los grupos de "Grupos en los que no pongo notas" se pueden consultar, pero no prepares ni escribas notas en ellos.
 - La sesión de Educa caduca a los 30-40 minutos; si caduca, vuelve a llamar a educa_login.
-- Si el docente pregunta cómo preparar sus ficheros, resume esto: una hoja por grupo y materia, la primera fila con cabeceras (Alumno o Apellidos + Nombre, y Nota), un alumno por fila con el nombre igual que en Educa, notas enteras (o IN/SU/BI/NT/SB en ESO), celdas vacías para quien no tenga nota, una columna opcional "Observaciones" con el comentario para las familias, nombre de fichero EVALUACIÓN_GRUPO_MATERIA y todos en la carpeta de notas. Guía completa: https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md`;
+- Si el docente pregunta cómo preparar sus ficheros, resume esto: una hoja por grupo y materia, la primera fila con cabeceras (Alumno o Apellidos + Nombre, y Nota), un alumno por fila con el nombre igual que en Educa, notas enteras (o IN/SU/BI/NT/SB en ESO), celdas vacías para quien no tenga nota, una columna opcional "Observaciones" con el comentario para las familias, nombre de fichero EVALUACIÓN_GRUPO_MATERIA y todos en la carpeta de notas. Guía completa: https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md
+
+${INCIDENT_INSTRUCTIONS}`;
 
 const GRADE_EXTENSIONS = new Set([".xlsx", ".csv"]);
 const MAX_DEPTH = 3;
@@ -169,6 +172,30 @@ export function registerGuide(server: McpServer): void {
         {
           role: "user" as const,
           content: { type: "text" as const, text: `Abre Educa y enséñame las notas que hay ahora en ${grupo}, ${materia}. Solo lectura: no cambies nada.` }
+        }
+      ]
+    })
+  );
+
+  server.registerPrompt(
+    "poner_parte",
+    {
+      title: "Poner un parte de convivencia",
+      description: "Redacta un parte a partir de lo que cuentes y lo registra en Educa tras tu visto bueno.",
+      argsSchema: z.object({
+        grupo: z.string().describe("Grupo del alumno (p. ej. ESO 3º D)"),
+        alumno: z.string().describe("Nombre y apellido del alumno"),
+        que_paso: z.string().describe("Qué ha pasado, cuándo y dónde, con tus palabras")
+      })
+    },
+    ({ grupo, alumno, que_paso }) => ({
+      messages: [
+        {
+          role: "user" as const,
+          content: {
+            type: "text" as const,
+            text: `Quiero poner un parte en Educa a ${alumno}, de ${grupo}. Lo que ha pasado: ${que_paso}\n\nRedáctalo con tono formal, propón el tipo de conducta y enséñame la vista previa. No guardes nada hasta que yo te lo diga.`
+          }
         }
       ]
     })

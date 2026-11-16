@@ -4,6 +4,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import ExcelJS from "exceljs";
+import { cleanReport, draftProblems, matchConduct, matchStudent, NORMATIVE_CONDUCTS, normalizeTime, normativeFor, parseIncidentDate, pickSession } from "../src/convivencia.js";
 import { writeFileSync } from "node:fs";
 import { blockedGroup, buildPlan, cleanComment, describeScale, detectStage, parseCsv, parseGradesFile, resolveGrade, sameValue, summarizeComments, termCode, type GradeSheet, type SheetField } from "../src/grades.js";
 
@@ -101,3 +102,50 @@ assert.deepEqual(summarizeComments(op), { cambia: 1, igual: 0, conserva: 1, no_v
 assert.equal(buildPlan(withObs, obsInputs, cfg, undefined, { overwriteComments: true }).items[1].commentStatus, "cambia");
 assert.deepEqual(op.rowsWithoutGrade, ["Sanz Ruiz, Ana"]);
 console.error("✅ Pruebas unitarias superadas");
+
+// --- Partes de convivencia
+const alumnos = ["Muro Etxeberria, Iker", "Muro Sanz, Ane", "Pérez López, Iker", "Abad Lorenzo, Paulette Trinidad"];
+assert.deepEqual(matchStudent(alumnos, "Iker Muro"), { ok: true, item: "Muro Etxeberria, Iker", approximate: false });
+assert.deepEqual(matchStudent(alumnos, "muro, ane"), { ok: true, item: "Muro Sanz, Ane", approximate: false });
+assert.equal(matchStudent(alumnos, "Iker").ok, false);
+assert.deepEqual(matchStudent(alumnos, "Paulette Abad"), { ok: true, item: "Abad Lorenzo, Paulette Trinidad", approximate: false });
+assert.deepEqual(matchStudent(alumnos, "Paul Abad"), { ok: true, item: "Abad Lorenzo, Paulette Trinidad", approximate: true });
+assert.equal(matchStudent(alumnos, "Jon Ruiz").ok, false);
+
+const conductas = [{ label: "FALTA DE RESPETO", category: "Conductas contrarias" }, { label: "DESCONSIDERACIÓN", category: "Conductas contrarias" }, { label: "OFENSA O AGRESIÓN GRAVE", category: "Conductas perjudiciales" }, { label: "AGRESIÓN", category: "Conductas perjudiciales" }, { label: "INCITAR", category: "Conductas perjudiciales" }];
+const label = (w: string) => { const m = matchConduct(conductas, w); return m.ok ? m.item.label : m.reason; };
+assert.equal(label("falta de respeto"), "FALTA DE RESPETO");
+assert.equal(label("art. 14 g)"), "FALTA DE RESPETO");
+assert.equal(label("14h"), "DESCONSIDERACIÓN");
+assert.equal(label("17.1 a"), "OFENSA O AGRESIÓN GRAVE");
+assert.equal(label("art 17.2"), "INCITAR");
+assert.equal(label("agresion"), "AGRESIÓN", "rótulo exacto antes que parcial");
+assert.equal(label("respeto"), "FALTA DE RESPETO");
+assert.equal(label("copia"), "ninguno");
+assert.equal(normativeFor("NO TRAE MATERIAL ")?.ref, "art. 14 c)");
+assert.equal(new Set(NORMATIVE_CONDUCTS.map(c => c.ref)).size, NORMATIVE_CONDUCTS.length);
+
+const hoy = new Date(2026, 10, 16);
+assert.deepEqual(parseIncidentDate("hoy", hoy), hoy);
+assert.deepEqual(parseIncidentDate("ayer", hoy), new Date(2026, 10, 15));
+assert.deepEqual(parseIncidentDate("3/11/2026", hoy), new Date(2026, 10, 3));
+assert.deepEqual(parseIncidentDate("2026-11-03", hoy), new Date(2026, 10, 3));
+assert.equal(parseIncidentDate("31/02/2026", hoy), null);
+assert.equal(parseIncidentDate("el lunes", hoy), null);
+assert.equal(normalizeTime("12.40"), "12:40");
+assert.equal(normalizeTime("8:30"), "08:30");
+assert.equal(normalizeTime("25:00"), null);
+
+const sesiones = [{ time: "08:30 - 09:25", subject: "Valores", teacher: "Otra", mine: false }, { time: "12:40 - 13:35", subject: "Tecnología", teacher: "Yo", mine: true }];
+assert.deepEqual(pickSession(sesiones, null), { ok: true, index: 1 });
+assert.deepEqual(pickSession(sesiones, "08:30"), { ok: true, index: 0 });
+assert.deepEqual(pickSession(sesiones, "13:00"), { ok: true, index: 1 }, "la sesión en curso a esa hora");
+assert.equal(pickSession(sesiones, "10:00").ok, false);
+assert.equal(pickSession(sesiones.map(s => ({ ...s, mine: false })), null).ok, false);
+
+assert.equal(cleanReport("  Primera   línea \r\n\n\n\nSegunda  "), "Primera línea\n\nSegunda");
+const largo = "El alumno interrumpe la clase repetidamente. ".repeat(100);
+assert.match(draftProblems({ group: "g", student: "s", date: hoy, place: "p", sessionTime: null, conduct: "", report: largo, familyContacted: false, measure: null }, hoy).join(), /4000/);
+assert.match(draftProblems({ group: "g", student: "s", date: new Date(2026, 10, 20), place: "p", sessionTime: null, conduct: "", report: largo.slice(0, 200), familyContacted: false, measure: null }, hoy).join(), /posterior a hoy/);
+assert.deepEqual(draftProblems({ group: "g", student: "s", date: hoy, place: "p", sessionTime: null, conduct: "", report: largo.slice(0, 200), familyContacted: false, measure: null }, hoy), []);
+console.log("Pruebas de partes de convivencia: OK");
