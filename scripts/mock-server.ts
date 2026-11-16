@@ -86,13 +86,15 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
     }
     if (url.pathname === "/cuaderno/guardar" && req.method === "POST") {
       const body = await readBody(req);
-      (saved["cuaderno"] ??= {})[body.get("id") ?? ""] = body.get("nota") ?? "";
+      if (body.has("obs")) (saved["observaciones"] ??= {})[body.get("id") ?? ""] = body.get("obs") ?? "";
+      else (saved["cuaderno"] ??= {})[body.get("id") ?? ""] = body.get("nota") ?? "";
       res.writeHead(204);
       return res.end();
     }
     if (url.pathname === "/cuaderno") {
       // Imita el Cuaderno de aula de Educa-Gestión: tarjetas por alumno, desplegables PrimeNG y guardado automático
       const cur = saved["cuaderno"] ?? {};
+      const obs = saved["observaciones"] ?? {};
       // Variantes: ?bach=1 (Bachillerato, nota tecleada), ?fp=1 (ciclo formativo, nota tecleada 1-10), ?apto=1 (Apto / No apto)
       const typed = url.searchParams.get("bach") || url.searchParams.get("fp");
       const grupo = url.searchParams.get("nombre") ?? (url.searchParams.get("fp") ? "CFGM 1º SMR" : url.searchParams.get("bach") ? "BTO N 1ºA" : url.searchParams.get("apto") ? "CFGS 2º DAM" : "ESO 1ºAB plu");
@@ -104,12 +106,18 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
         const cell = s.locked
           ? `<app-ver-calificacion><span class="spanCalificacion">FPEX</span></app-ver-calificacion>`
           : typed
-          ? `<p-select class="p-select" data-id="${s.id}"><input type="text" class="p-select-label" value="${v}" onchange="pend('${s.id}', this.value)"><div class="p-select-dropdown" style="display:inline-block;width:16px;height:16px"></div></p-select>`
+          ? `<p-select class="p-select" data-id="${s.id}"><input type="text" class="p-select-label" value="${v === "0" ? "0 " : v}" onchange="pend('${s.id}', this.value)"><div class="p-select-dropdown" style="display:inline-block;width:16px;height:16px"></div></p-select>`
           : `<p-select placeholder="Sin calificar" class="p-select" data-id="${s.id}"><span role="combobox" class="p-select-label${v ? "" : " p-placeholder"}">${v || "Sin calificar"}</span></p-select>`;
         return `<div class="elementoLista"><div class="infoAlumno" id="id-${s.id}"><a class="enlaceNombre"><span class="nombreTabla">${ap} <span>,</span> <span class="nombre">${nom}</span></span></a></div>
           <app-calificacion-evaluaciones><table><thead><tr><th><span>Ev. In.</span></th><th><span>1Ev</span></th><th><span>2Ev</span></th></tr></thead>
           <tbody><tr><td><span class="spanCalificacion">NN</span></td><td>${cell}</td><td><span class="spanCalificacion"></span></td></tr></tbody></table></app-calificacion-evaluaciones>
-          <h4>Observaciones</h4><textarea></textarea></div>`;
+          <app-detalle-calificacion><div class="detalleCalificacion">
+            <div class="p-lg-6"><app-observaciones-codificadas><div class="titulo"><span>Observaciones</span></div><ul class="botonesAccion"><li><span title="Nuevo">+</span></li></ul></app-observaciones-codificadas></div>
+            <div class="p-lg-6"><div class="caja"><div class="titulo"><span>Observaciones</span></div><div class="contenidoCaja fondoBlanco"><lib-text-area><div>
+              <textarea class="p-textarea"${s.locked ? " disabled" : ""} oninput="pendObs('${s.id}', this)">${(obs[s.id] ?? "").replace(/</g, "&lt;")}</textarea>
+              <span class="numeroElementos"><span>Numero de caracteres restantes:</span> <span>${4000 - (obs[s.id] ?? "").length}</span></span>
+            </div></lib-text-area></div></div></div>
+          </div></app-detalle-calificacion></div>`;
       }).join("");
       return send(page("EducaGestion", `<div id="usuario-conectado">Profe Demo</div><h3>Calificaciones de evaluación: Asignatura</h3>
         <app-selector-grupo-asignatura-anidado><div class="noPopUp"><p-select placeholder="Seleccione un grupo"><span role="combobox">${grupo}</span></p-select><ul role="listbox"><li role="option" aria-selected="true">${materia}</li><li role="option" aria-selected="false">Otra materia</li></ul></div></app-selector-grupo-asignatura-anidado>
@@ -119,11 +127,21 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
         <div id="botones"></div>
         <script>
           const pending = {};
+          const pendingObs = {};
+          function pendObs(id, el) {
+            pendingObs[id] = el.value;
+            el.parentElement.querySelector(".numeroElementos span:last-child").textContent = 4000 - el.value.length;
+            botones();
+          }
           function pend(id, nota) {
             pending[id] = nota;
+            botones();
+          }
+          function botones() {
             document.getElementById("botones").innerHTML = '<lib-btn-aceptar-cancelar><button class="botonRojo" id="ok"><span>Aceptar</span></button><button class="botonRojo"><span>Cancelar</span></button></lib-btn-aceptar-cancelar>';
             document.getElementById("ok").onclick = async () => {
               for (const [i, n] of Object.entries(pending)) await fetch("/cuaderno/guardar", { method: "POST", headers: {"content-type":"application/x-www-form-urlencoded"}, body: "id=" + i + "&nota=" + n });
+              for (const [i, o] of Object.entries(pendingObs)) await fetch("/cuaderno/guardar", { method: "POST", headers: {"content-type":"application/x-www-form-urlencoded"}, body: "id=" + i + "&obs=" + encodeURIComponent(o) });
               document.getElementById("botones").innerHTML = '<div class="mensaje">Datos guardados correctamente</div>';
             };
           }

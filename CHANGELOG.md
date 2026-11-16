@@ -2,6 +2,13 @@
 
 Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 
+## 1.2.0 · 2026-11-16
+
+- Observaciones para las familias: si el fichero tiene una columna *Observaciones* o *Comentario* (o se dictan en el chat), el conector escribe también el texto en el cuadro de observaciones de cada alumno en Educa-Gestión. La vista previa lo enseña antes, admite alumnos con observación y sin nota, avisa si un texto supera los 4000 caracteres y no sustituye observaciones que ya existan salvo que se pida (`overwrite_comments`). Como las notas, solo se guardan al pulsar *Aceptar* con confirmación.
+- `educa_read_grade_sheet` muestra las observaciones actuales de cada alumno.
+- En tablas con columna de nota y columna de observaciones, la de nota se elige sola.
+- Corregido: los ceros que Educa muestra como `"0 "` (con espacio final) ya no salen como cambio pendiente ni como fallo al verificar.
+
 ## 1.1.1 · 2026-11-15
 
 - README renovado: primeros pasos, grupos con nombre parcial, qué se ha probado en el Educa real, diagramas del flujo y de la vista previa.

@@ -31,11 +31,22 @@ export interface SheetField {
   max?: number;
 }
 
+/** Cuadro de texto libre de observaciones (comentario para las familias) de un alumno. */
+export interface CommentField {
+  key: string;
+  value: string;
+  disabled: boolean;
+  /** Máximo de caracteres que admite Educa (4000 en Educa-Gestión), si se conoce. */
+  maxLength?: number;
+}
+
 export interface SheetRow {
   index: number;
   name: string;
   studentId?: string;
   field: SheetField | null;
+  /** Observaciones del alumno, si la pantalla tiene ese cuadro. */
+  comment?: CommentField | null;
 }
 
 export interface GradeSheet {
@@ -53,8 +64,11 @@ export interface GradeSheet {
 
 export interface InputGrade {
   student: string;
+  /** Vacío si el fichero solo trae observaciones para ese alumno. */
   grade: string;
   id?: string;
+  /** Observaciones para las familias (opcional). */
+  comment?: string;
 }
 
 // ---------- Normalización de nombres ----------
@@ -102,6 +116,7 @@ const SURNAME_HEADERS = ["apellidos", "apellido"];
 const FIRSTNAME_HEADERS = ["nombre"];
 const GRADE_HEADERS = ["nota final", "nota", "calificacion final", "calificacion", "final", "media", "nota evaluacion"];
 const ID_HEADERS = ["nia", "id", "codigo", "dni", "n lista", "numero"];
+const COMMENT_HEADERS = ["observaciones para las familias", "observaciones familias", "observaciones", "observacion", "comentario para las familias", "comentarios para las familias", "comentarios", "comentario", "obs"];
 
 function findHeader(headers: string[], wanted: string[], explicit?: string): number {
   if (explicit) {
@@ -126,9 +141,20 @@ export interface ParseOptions {
   nameColumn?: string;
   gradeColumn?: string;
   idColumn?: string;
+  /** Cabecera de la columna de observaciones; si no se indica, se busca una tipo "Observaciones" o "Comentario". */
+  commentColumn?: string;
 }
 
-export async function parseGradesFile(path: string, opts: ParseOptions = {}): Promise<{ grades: InputGrade[]; headers: string[]; skipped: string[] }> {
+export interface ParsedGrades {
+  grades: InputGrade[];
+  headers: string[];
+  /** Alumnos sin nota ni observación. */
+  skipped: string[];
+  /** Cabecera de la columna de observaciones usada, o null si el fichero no tiene. */
+  commentColumn: string | null;
+}
+
+export async function parseGradesFile(path: string, opts: ParseOptions = {}): Promise<ParsedGrades> {
   const ext = extname(path).toLowerCase();
   let table: string[][];
   if (ext === ".xlsx") table = await readXlsx(path, opts.sheet);
@@ -159,22 +185,27 @@ export async function parseGradesFile(path: string, opts: ParseOptions = {}): Pr
     if (surnameCol === -1 || firstCol === -1) nameCol = surnameCol === -1 ? firstCol : surnameCol;
   }
   const idCol = opts.idColumn ? findHeader(headers, [], opts.idColumn) : headers.findIndex(h => ID_HEADERS.includes(normalize(h)));
+  let commentCol = opts.commentColumn ? findHeader(headers, [], opts.commentColumn) : headers.findIndex(h => COMMENT_HEADERS.includes(normalize(h)));
+  if (commentCol === -1 && !opts.commentColumn) commentCol = headers.findIndex(h => /^(observ|comentario)/.test(normalize(h)));
+  if (commentCol !== -1 && [gradeCol, nameCol, surnameCol, firstCol, idCol].includes(commentCol)) commentCol = -1;
 
   const grades: InputGrade[] = [];
   const skipped: string[] = [];
   for (const row of table.slice(headerRow + 1)) {
     const student = nameCol !== -1 ? (row[nameCol] ?? "").trim() : `${(row[surnameCol] ?? "").trim()}, ${(row[firstCol] ?? "").trim()}`;
     const grade = (row[gradeCol] ?? "").trim();
+    const comment = commentCol !== -1 ? cleanComment(row[commentCol] ?? "") : "";
     if (!student.replace(/[, ]/g, "")) continue;
-    if (!grade) {
+    if (!grade && !comment) {
       skipped.push(student);
       continue;
     }
     const entry: InputGrade = { student, grade };
     if (idCol !== -1 && row[idCol]?.trim()) entry.id = row[idCol].trim();
+    if (comment) entry.comment = comment;
     grades.push(entry);
   }
-  return { grades, headers, skipped };
+  return { grades, headers, skipped, commentColumn: commentCol !== -1 ? headers[commentCol] : null };
 }
 
 async function readXlsx(path: string, sheetName?: string): Promise<string[][]> {
@@ -368,6 +399,25 @@ function numbersIn(text: string): number[] {
   return (text.match(/\d+(?:[.,]\d+)?/g) ?? []).map(n => Number(n.replace(",", ".")));
 }
 
+/**
+ * ¿Son la misma nota? Ignora espacios alrededor (Educa muestra los ceros como "0 "),
+ * mayúsculas y la coma o el punto decimal ("7,0" = "7").
+ */
+export function sameValue(a: string | undefined, b: string | undefined): boolean {
+  const x = (a ?? "").trim();
+  const y = (b ?? "").trim();
+  if (x === y) return true;
+  const nx = parseNumber(x);
+  const ny = parseNumber(y);
+  if (nx !== null && ny !== null) return nx === ny;
+  return x.toLowerCase() === y.toLowerCase();
+}
+
+/** Observación lista para escribir: saltos de línea unificados, sin espacios sobrantes al principio ni al final. */
+export function cleanComment(text: string): string {
+  return text.replace(/\r\n?/g, "\n").replace(/[ \t]+\n/g, "\n").trim();
+}
+
 export function resolveGrade(field: SheetField, grade: string, cfg: EducaConfig["grades"], stage: Stage = "desconocida"): GradeResolution {
   const raw = grade.trim();
   const n = parseNumber(raw);
@@ -429,7 +479,14 @@ export function resolveGrade(field: SheetField, grade: string, cfg: EducaConfig[
 
 // ---------- Emparejar alumnos y preparar el plan ----------
 
-export type PlanStatus = "cambia" | "igual" | "sin_coincidencia" | "ambigua" | "nota_no_valida" | "campo_bloqueado" | "duplicada";
+export type PlanStatus = "cambia" | "igual" | "sin_nota" | "sin_coincidencia" | "ambigua" | "nota_no_valida" | "campo_bloqueado" | "duplicada";
+
+/**
+ * Qué se hará con las observaciones de un alumno:
+ * cambia (se escribirán), igual (ya están así), conserva (ya tiene otras y no se sustituyen),
+ * no_valida (demasiado largas), bloqueado (cuadro deshabilitado), sin_campo (la pantalla no tiene cuadro de observaciones).
+ */
+export type CommentStatus = "cambia" | "igual" | "conserva" | "no_valida" | "bloqueado" | "sin_campo";
 
 export interface PlanItem {
   student: string;
@@ -443,6 +500,12 @@ export interface PlanItem {
   currentDisplay?: string;
   fuzzyMatch?: boolean;
   note?: string;
+  /** Observaciones del fichero para este alumno, si las hay. */
+  comment?: string;
+  commentStatus?: CommentStatus;
+  commentKey?: string;
+  currentComment?: string;
+  commentNote?: string;
 }
 
 export interface GradePlan {
@@ -451,14 +514,48 @@ export interface GradePlan {
   rowsWithoutGrade: string[];
 }
 
-export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaConfig["grades"], stageOverride?: Stage): GradePlan {
+export interface PlanOptions {
+  /** Sustituir las observaciones que ya haya en Educa (por defecto no se tocan). */
+  overwriteComments?: boolean;
+}
+
+function planComment(item: PlanItem, row: SheetRow, opts: PlanOptions): void {
+  const wanted = cleanComment(item.comment ?? "");
+  if (!wanted) return;
+  item.comment = wanted;
+  const c = row.comment;
+  if (!c) {
+    item.commentStatus = "sin_campo";
+    item.commentNote = "esta pantalla no tiene cuadro de observaciones";
+    return;
+  }
+  item.commentKey = c.key;
+  item.currentComment = c.value.trim();
+  if (c.disabled) {
+    item.commentStatus = "bloqueado";
+    item.commentNote = "el cuadro de observaciones está deshabilitado en Educa";
+  } else if (c.maxLength && wanted.length > c.maxLength) {
+    item.commentStatus = "no_valida";
+    item.commentNote = `la observación tiene ${wanted.length} caracteres y Educa admite ${c.maxLength}`;
+  } else if (cleanComment(c.value) === wanted) {
+    item.commentStatus = "igual";
+  } else if (c.value.trim() && !opts.overwriteComments) {
+    item.commentStatus = "conserva";
+    item.commentNote = "ya tiene observaciones en Educa; no se sustituyen salvo que el profesor lo pida";
+  } else {
+    item.commentStatus = "cambia";
+  }
+}
+
+export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaConfig["grades"], stageOverride?: Stage, opts: PlanOptions = {}): GradePlan {
   const stage = stageOverride ?? detectStage(sheet.context);
-  const rows = sheet.rows.filter(r => r.field);
+  const rows = sheet.rows.filter(r => r.field || r.comment);
   const used = new Map<number, number>(); // rowIndex -> item index
   const items: PlanItem[] = [];
 
   for (const input of inputs) {
-    const item: PlanItem = { student: input.student, grade: input.grade, status: "sin_coincidencia" };
+    const item: PlanItem = { student: input.student, grade: input.grade.trim(), status: "sin_coincidencia" };
+    if (input.comment?.trim()) item.comment = cleanComment(input.comment);
     let match: SheetRow | undefined;
     let fuzzy = false;
 
@@ -486,11 +583,13 @@ export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaCon
       }
     }
 
-    if (match && match.field) {
+    if (match) {
       item.educaName = match.name;
       item.rowIndex = match.index;
-      item.fieldKey = match.field.key;
-      item.currentDisplay = match.field.valueText || match.field.value || "(vacía)";
+      if (match.field) {
+        item.fieldKey = match.field.key;
+        item.currentDisplay = match.field.valueText.trim() || match.field.value.trim() || "(vacía)";
+      }
       if (fuzzy) item.fuzzyMatch = true;
       const prev = used.get(match.index);
       if (prev !== undefined) {
@@ -498,21 +597,29 @@ export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaCon
         item.note = `la fila de ${match.name} ya la usa "${items[prev].student}"`;
         items[prev].status = "duplicada";
         items[prev].note = `la fila de ${match.name} también la reclama "${input.student}"`;
-      } else if (match.field.disabled) {
-        used.set(match.index, items.length);
-        item.status = "campo_bloqueado";
-        item.note = "el campo está deshabilitado en Educa (¿evaluación cerrada?)";
+        delete items[prev].commentStatus;
       } else {
         used.set(match.index, items.length);
-        const res = resolveGrade(match.field, input.grade, cfg, stage);
-        if (!res.ok) {
-          item.status = "nota_no_valida";
-          item.note = res.reason;
+        if (!item.grade) {
+          item.status = "sin_nota";
+        } else if (!match.field) {
+          item.status = "campo_bloqueado";
+          item.note = "no hay campo de nota para este alumno en la columna elegida";
+        } else if (match.field.disabled) {
+          item.status = "campo_bloqueado";
+          item.note = "el campo está deshabilitado en Educa (¿evaluación cerrada?)";
         } else {
-          item.newValue = res.value;
-          item.newDisplay = res.display;
-          item.status = res.value === match.field.value ? "igual" : "cambia";
+          const res = resolveGrade(match.field, item.grade, cfg, stage);
+          if (!res.ok) {
+            item.status = "nota_no_valida";
+            item.note = res.reason;
+          } else {
+            item.newValue = res.value;
+            item.newDisplay = res.display;
+            item.status = sameValue(res.value, match.field.value) ? "igual" : "cambia";
+          }
         }
+        planComment(item, match, opts);
       }
     } else if (item.status === "sin_coincidencia") {
       item.note = "no hay ningún alumno con ese nombre en la tabla de Educa";
@@ -520,12 +627,23 @@ export function buildPlan(sheet: GradeSheet, inputs: InputGrade[], cfg: EducaCon
     items.push(item);
   }
 
-  const rowsWithoutGrade = rows.filter(r => !used.has(r.index)).map(r => r.name);
+  const rowsWithoutGrade = rows.filter(r => r.field && (!used.has(r.index) || items[used.get(r.index)!].status === "sin_nota")).map(r => r.name);
   return { items, rowsWithoutGrade };
 }
 
 export function summarizePlan(plan: GradePlan): Record<PlanStatus, number> {
-  const counts: Record<PlanStatus, number> = { cambia: 0, igual: 0, sin_coincidencia: 0, ambigua: 0, nota_no_valida: 0, campo_bloqueado: 0, duplicada: 0 };
+  const counts: Record<PlanStatus, number> = { cambia: 0, igual: 0, sin_nota: 0, sin_coincidencia: 0, ambigua: 0, nota_no_valida: 0, campo_bloqueado: 0, duplicada: 0 };
   for (const i of plan.items) counts[i.status]++;
   return counts;
+}
+
+export function summarizeComments(plan: GradePlan): Record<CommentStatus, number> {
+  const counts: Record<CommentStatus, number> = { cambia: 0, igual: 0, conserva: 0, no_valida: 0, bloqueado: 0, sin_campo: 0 };
+  for (const i of plan.items) if (i.commentStatus) counts[i.commentStatus]++;
+  return counts;
+}
+
+/** ¿Hay algo que escribir para este alumno (nota u observación)? */
+export function hasWork(item: PlanItem): boolean {
+  return item.status === "cambia" || item.commentStatus === "cambia";
 }

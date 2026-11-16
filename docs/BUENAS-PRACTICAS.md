@@ -60,6 +60,7 @@ Así puedes pedir *"mete las notas de la 1ª evaluación de 1ºA de Bachillerato
 - **Una fila por alumno**, sin filas de totales, medias de clase ni comentarios debajo.
 - **Nada de celdas combinadas** ni títulos encima de la tabla.
 - **Nombres como en Educa.** El emparejamiento tolera tildes, mayúsculas y el orden *Apellidos, Nombre* / *Nombre Apellidos*, pero si pones solo un apellido o un mote, la coincidencia saldrá como *aproximada* y tendrás que confirmarla. Lo más fiable: copia la lista de alumnos desde Educa al empezar el curso.
+- **Columna Observaciones (opcional).** Si quieres que Claude escriba también el comentario para las familias, añade una columna *Observaciones* (o *Comentario*). Un alumno puede tener observación sin nota. Escríbelas tal como quieres que las lean las familias: Claude no las redacta ni las corrige, y no sustituye las que ya haya en Educa salvo que se lo pidas. Máximo 4000 caracteres por alumno.
 - **Columna NIA (opcional).** Si la tienes, añádela con la cabecera *NIA*: ayuda a distinguir a dos alumnos con nombres parecidos.
 - **Sin nota = celda vacía.** Ese alumno se salta y la vista previa te lo recuerda.
 - **Una hoja por fichero.** Claude lee la primera hoja. Si guardas varias materias o evaluaciones en hojas distintas del mismo libro, ponles nombres claros y dile cuál usar (*"usa la hoja 2EV"*).
@@ -94,14 +95,14 @@ Más detalle y normativa: [normativa-evaluacion.md](normativa-evaluacion.md).
 
 1. **Cierra el Excel** antes de pedírselo a Claude, para que lea la versión guardada.
 2. Pide: *"Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC."* (o usa el atajo **Meter notas en Educa** del menú **+**).
-3. **Lee la vista previa entera:** alumnos sin emparejar, nombres aproximados, notas rechazadas y alumnos de Educa sin nota.
+3. **Lee la vista previa entera:** alumnos sin emparejar, nombres aproximados, notas rechazadas, alumnos de Educa sin nota y, si las hay, las observaciones que se escribirán.
 4. Di *"escríbelas"* y **revísalas en la ventana del navegador**.
 5. Solo entonces di *"guarda"*. Cerrar y firmar la evaluación sigue siendo cosa tuya, a mano.
 
 ## 8. Privacidad
 
 - Guarda los ficheros en tu ordenador o en la nube de tu cuenta educativa, no en carpetas compartidas con otras personas.
-- Usa solo las columnas necesarias (alumno, nota y, si quieres, NIA). No hace falta poner observaciones, teléfonos ni nada más.
+- Usa solo las columnas necesarias (alumno, nota y, si quieres, NIA y observaciones). No pongas teléfonos, diagnósticos ni otros datos sensibles: lo que escribas en *Observaciones* pasa por la conversación con la IA y lo leerán las familias.
 - Al terminar el curso, archiva o borra lo que ya no necesites, según las indicaciones de tu centro.
 
 ---

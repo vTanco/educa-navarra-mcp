@@ -23,7 +23,7 @@ import { CATALOG_FILE, findByName, loadCatalog, saveCatalog, type GroupCatalog, 
 import { EducaBrowser, FieldGone } from "./browser.js";
 import { loadConfig, PROJECT_DIR } from "./config.js";
 import { registerGuide, SERVER_INSTRUCTIONS } from "./guide.js";
-import { blockedGroup, buildPlan, describeScale, normalize as normalizeName, parseGradesFile, summarizePlan, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
+import { blockedGroup, buildPlan, cleanComment, describeScale, hasWork, normalize as normalizeName, parseGradesFile, sameValue, summarizeComments, summarizePlan, type CommentStatus, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
 
 const CHARACTER_LIMIT = 25_000;
 const PACKAGE_VERSION: string = (JSON.parse(readFileSync(join(PROJECT_DIR, "package.json"), "utf8")) as { version: string }).version;
@@ -91,6 +91,7 @@ async function requireLogin(): Promise<void> {
 const STATUS_LABEL: Record<PlanItem["status"], string> = {
   cambia: "✏️ se escribirá",
   igual: "✔️ ya está igual",
+  sin_nota: "— sin nota en el fichero",
   sin_coincidencia: "❌ alumno no encontrado",
   ambigua: "⚠️ coincidencia dudosa",
   nota_no_valida: "❌ nota no válida",
@@ -98,10 +99,30 @@ const STATUS_LABEL: Record<PlanItem["status"], string> = {
   duplicada: "⚠️ fila duplicada"
 };
 
+const COMMENT_LABEL: Record<CommentStatus, string> = {
+  cambia: "se escribirá",
+  igual: "ya está igual",
+  conserva: "no se toca: ya tiene otras",
+  no_valida: "demasiado larga",
+  bloqueado: "cuadro bloqueado",
+  sin_campo: "sin cuadro en esta pantalla"
+};
+
+function shorten(t: string, max = 70): string {
+  const one = t.replace(/\s+/g, " ").trim();
+  return one.length > max ? `${one.slice(0, max - 1)}…` : one;
+}
+
+function cell(t: string): string {
+  return t.replace(/\|/g, "/");
+}
+
 function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale): string {
   const { plan } = stored;
   const counts = summarizePlan(plan);
-  const fuzzy = plan.items.filter(i => i.fuzzyMatch && i.status === "cambia").length;
+  const fuzzy = plan.items.filter(i => i.fuzzyMatch && hasWork(i)).length;
+  const withComments = plan.items.some(i => i.commentStatus);
+  const cc = summarizeComments(plan);
   const lines = [
     `# Vista previa de notas (plan ${stored.id})`,
     "",
@@ -112,20 +133,32 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale):
     `- Se escribirán: **${counts.cambia}**${fuzzy ? ` (de ellas ${fuzzy} por coincidencia aproximada de nombre, revísalas)` : ""}`,
     `- Ya estaban igual: ${counts.igual}`,
     `- Con problemas: ${counts.sin_coincidencia + counts.ambigua + counts.nota_no_valida + counts.campo_bloqueado + counts.duplicada}`,
+    ...(withComments
+      ? [`- Observaciones para las familias: se escribirán **${cc.cambia}**, ya estaban igual ${cc.igual}, no se tocan porque ya tenían otras ${cc.conserva}, con problemas ${cc.no_valida + cc.bloqueado + cc.sin_campo}`]
+      : []),
     "",
-    "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado |",
-    "|---|---|---|---|---|"
+    withComments ? "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado | Observaciones |" : "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado |",
+    withComments ? "|---|---|---|---|---|---|" : "|---|---|---|---|---|"
   ];
   for (const i of plan.items) {
     const status = `${STATUS_LABEL[i.status]}${i.fuzzyMatch ? " (nombre aproximado)" : ""}${i.note ? `: ${i.note}` : ""}`;
-    lines.push(`| ${i.student} | ${i.educaName ?? "—"} | ${i.currentDisplay ?? "—"} | ${i.newDisplay ?? i.grade} | ${status} |`);
+    const base = `| ${i.student} | ${i.educaName ?? "—"} | ${i.currentDisplay ?? "—"} | ${i.newDisplay ?? (i.grade || "—")} | ${status} |`;
+    if (!withComments) {
+      lines.push(base);
+      continue;
+    }
+    const obs = i.comment
+      ? `${i.commentStatus ? `${COMMENT_LABEL[i.commentStatus]}: ` : ""}"${cell(shorten(i.comment))}"${i.commentStatus === "conserva" && i.currentComment ? ` (actual: "${cell(shorten(i.currentComment, 40))}")` : ""}${i.commentNote && i.commentStatus !== "conserva" ? ` (${i.commentNote})` : ""}`
+      : "—";
+    lines.push(`${base} ${obs} |`);
   }
   if (plan.rowsWithoutGrade.length) {
     lines.push("", `**Alumnos de Educa sin nota en el fichero (${plan.rowsWithoutGrade.length}):** ${plan.rowsWithoutGrade.join(", ")}`);
   }
+  if (cc.conserva) lines.push("", `Alumnos que ya tenían observaciones en Educa y no se sustituyen: ${cc.conserva}. Si el profesor quiere reemplazarlas, repite la vista previa con overwrite_comments=true.`);
   lines.push(
     "",
-    "Nada se ha cambiado todavía. Enseña esta tabla al profesor; si da el visto bueno, llama a educa_fill_grades con este plan_id" +
+    "Nada se ha cambiado todavía. Enseña esta tabla al profesor (con el texto completo de las observaciones si lo pide); si da el visto bueno, llama a educa_fill_grades con este plan_id" +
       (fuzzy ? " (con include_fuzzy=true solo si confirma las coincidencias aproximadas)" : "") +
       "."
   );
@@ -305,7 +338,7 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
     "educa_read_grade_sheet",
     {
       title: "Leer la tabla de notas",
-      description: `Lee la tabla de calificaciones abierta en Educa: alumnos y nota actual de cada uno, y la escala de calificación que pide esa pantalla (términos IN/SU/BI/NT/SB en ESO, número de 0 a 10 en Bachillerato, de 1 a 10 en FP, Apto/No apto...). La escala se deduce de la propia pantalla, no del nombre del grupo. No cambia nada. Si la tabla tiene varias columnas editables (p. ej. nota y observaciones, o varias evaluaciones), indica cuál con column; la respuesta lista las columnas editables.`,
+      description: `Lee la tabla de calificaciones abierta en Educa: alumnos, nota actual y observaciones para las familias de cada uno (si la pantalla tiene ese cuadro), y la escala de calificación que pide esa pantalla (términos IN/SU/BI/NT/SB en ESO, número de 0 a 10 en Bachillerato, de 1 a 10 en FP, Apto/No apto...). La escala se deduce de la propia pantalla, no del nombre del grupo. No cambia nada. Si la tabla tiene varias columnas editables (p. ej. nota y observaciones, o varias evaluaciones), indica cuál con column; la respuesta lista las columnas editables.`,
       inputSchema: z.strictObject({
         column: z.string().optional().describe("Parte del texto de la cabecera de la columna de nota, p. ej. 'Final' o '1ª Ev'"),
         response_format: ResponseFormat
@@ -324,14 +357,31 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
         scale,
         column: sheet.column,
         editable_columns: sheet.editableColumns,
-        students: sheet.rows.map(r => ({ name: r.name, ...(r.studentId ? { id: r.studentId } : {}), grade: r.field ? r.field.valueText || r.field.value : null, editable: r.field ? !r.field.disabled : false }))
+        comments_available: sheet.rows.some(r => r.comment),
+        students: sheet.rows.map(r => ({
+          name: r.name,
+          ...(r.studentId ? { id: r.studentId } : {}),
+          grade: r.field ? (r.field.valueText || r.field.value).trim() : null,
+          editable: r.field ? !r.field.disabled : false,
+          ...(r.comment ? { comment: r.comment.value.trim() } : {})
+        }))
       };
       if (response_format === "json") return json(data);
       if (!sheet.column) {
         return text(`La tabla tiene varias columnas editables y no sé cuál es la nota: ${sheet.editableColumns.join(" | ")}. Vuelve a llamar con column.`);
       }
-      const lines = [`# Tabla de notas · columna "${sheet.column}" · ${data.students.length} alumnos`, ...(sheet.context ? [`Pantalla: ${sheet.context}`] : []), `Escala detectada: ${scale.description}`, ...(blocked ? [blocked] : []), "", "| # | Alumno | Nota actual |", "|---|---|---|"];
-      data.students.forEach((s, i) => lines.push(`| ${i + 1} | ${s.name} | ${s.grade || "(vacía)"}${s.editable ? "" : " 🔒"} |`));
+      const obs = data.comments_available;
+      const lines = [
+        `# Tabla de notas · columna "${sheet.column}" · ${data.students.length} alumnos`,
+        ...(sheet.context ? [`Pantalla: ${sheet.context}`] : []),
+        `Escala detectada: ${scale.description}`,
+        ...(obs ? ["La pantalla tiene cuadro de observaciones para las familias."] : []),
+        ...(blocked ? [blocked] : []),
+        "",
+        obs ? "| # | Alumno | Nota actual | Observaciones |" : "| # | Alumno | Nota actual |",
+        obs ? "|---|---|---|---|" : "|---|---|---|"
+      ];
+      data.students.forEach((s, i) => lines.push(`| ${i + 1} | ${s.name} | ${s.grade || "(vacía)"}${s.editable ? "" : " 🔒"} |${obs ? ` ${s.comment ? cell(shorten(s.comment)) : "(vacías)"} |` : ""}`));
       return text(lines.join("\n"));
     }
   );
@@ -448,19 +498,20 @@ Basta parte del nombre si no es ambiguo: group="1ºAB", subject="Tecnología", e
     "educa_load_grades_file",
     {
       title: "Leer el fichero de notas",
-      description: `Lee un Excel (.xlsx) o CSV del ordenador del profesor y devuelve la lista alumno → nota que se ha entendido. No toca Educa. Detecta solas las columnas tipo "Alumno"/"Apellidos"+"Nombre" y "Nota"/"Nota final"/"Calificación"; si no, indícalas.`,
+      description: `Lee un Excel (.xlsx) o CSV del ordenador del profesor y devuelve la lista alumno → nota (y observaciones, si las hay) que se ha entendido. No toca Educa. Detecta solas las columnas tipo "Alumno"/"Apellidos"+"Nombre", "Nota"/"Nota final"/"Calificación" y, opcional, "Observaciones"/"Comentario"; si no, indícalas.`,
       inputSchema: z.strictObject({
         file_path: z.string().describe("Ruta absoluta al .xlsx o .csv"),
         sheet: z.string().optional().describe("Hoja del Excel (por defecto la primera)"),
         name_column: z.string().optional().describe("Cabecera de la columna del alumno"),
         grade_column: z.string().optional().describe("Cabecera de la columna de la nota"),
-        id_column: z.string().optional().describe("Cabecera de una columna de identificador (NIA), opcional")
+        id_column: z.string().optional().describe("Cabecera de una columna de identificador (NIA), opcional"),
+        comment_column: z.string().optional().describe("Cabecera de la columna de observaciones para las familias, si no se detecta sola")
       }),
       annotations: { readOnlyHint: true, openWorldHint: false }
     },
-    async ({ file_path, sheet, name_column, grade_column, id_column }) => {
-      const res = await parseGradesFile(file_path, { sheet, nameColumn: name_column, gradeColumn: grade_column, idColumn: id_column });
-      return json({ headers: res.headers, count: res.grades.length, grades: res.grades, students_without_grade: res.skipped });
+    async ({ file_path, sheet, name_column, grade_column, id_column, comment_column }) => {
+      const res = await parseGradesFile(file_path, { sheet, nameColumn: name_column, gradeColumn: grade_column, idColumn: id_column, commentColumn: comment_column });
+      return json({ headers: res.headers, count: res.grades.length, comment_column: res.commentColumn, with_comment: res.grades.filter(g => g.comment).length, grades: res.grades, students_without_grade: res.skipped });
     }
   );
 
@@ -472,17 +523,21 @@ Basta parte del nombre si no es ambiguo: group="1ºAB", subject="Tecnología", e
 
 Los nombres se emparejan sin importar mayúsculas, tildes ni el orden "Apellidos, Nombre" / "Nombre Apellidos". Las coincidencias aproximadas se marcan y no se escriben salvo que se pida.
 
+Observaciones para las familias (opcional): si el fichero tiene una columna "Observaciones" o "Comentario" (o se pasa comment en grades), también se prepara el texto del cuadro de observaciones de cada alumno. Un alumno puede llevar solo observación, sin nota. Las observaciones que ya haya en Educa no se sustituyen salvo overwrite_comments=true (pídelo solo si el profesor lo quiere). Máximo 4000 caracteres por alumno.
+
 Enseña siempre el resultado al profesor antes de rellenar.`,
       inputSchema: z.strictObject({
         file_path: z.string().optional().describe("Ruta a un .xlsx o .csv con las notas"),
         grades: z
-          .array(z.strictObject({ student: z.string().min(2), grade: z.string().min(1), id: z.string().optional() }))
+          .array(z.strictObject({ student: z.string().min(2), grade: z.string().default(""), id: z.string().optional(), comment: z.string().optional().describe("Observaciones para las familias (opcional)") }))
           .optional()
-          .describe('Alternativa al fichero: [{"student":"García López, Ana","grade":"7"}, ...]'),
+          .describe('Alternativa al fichero: [{"student":"García López, Ana","grade":"7","comment":"Buen trabajo en el proyecto."}, ...]'),
         sheet: z.string().optional(),
         name_column: z.string().optional(),
         grade_column: z.string().optional(),
         id_column: z.string().optional(),
+        comment_column: z.string().optional().describe("Columna del fichero con las observaciones, si no se detecta sola"),
+        overwrite_comments: z.boolean().default(false).describe("Sustituir las observaciones que ya haya en Educa (solo si el profesor lo pide)"),
         column: z.string().optional().describe("Columna de Educa donde va la nota, si hay varias editables"),
         stage: z.enum(["primaria", "eso", "bachillerato", "fp"]).optional().describe("Etapa del grupo, solo si la detección automática falla (afecta al rango numérico: en FP 1–10, en Bachillerato 0–10)"),
         response_format: ResponseFormat
@@ -492,22 +547,22 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
     async args => {
       if (!args.file_path && !args.grades?.length) throw new Error("Indica file_path o grades.");
       await requireLogin();
-      let inputs: InputGrade[] = args.grades ?? [];
+      let inputs: InputGrade[] = (args.grades ?? []).filter(g => g.grade.trim() || g.comment?.trim());
       if (args.file_path) {
-        inputs = (await parseGradesFile(args.file_path, { sheet: args.sheet, nameColumn: args.name_column, gradeColumn: args.grade_column, idColumn: args.id_column })).grades;
+        inputs = (await parseGradesFile(args.file_path, { sheet: args.sheet, nameColumn: args.name_column, gradeColumn: args.grade_column, idColumn: args.id_column, commentColumn: args.comment_column })).grades;
       }
-      if (!inputs.length) throw new Error("El fichero no contiene ninguna nota.");
+      if (!inputs.length) throw new Error("No hay ninguna nota ni observación que preparar.");
       const sheet = await browser.readGradeSheet(args.column, true);
       if (!sheet.column && !config.gradeSheet.gradeFieldSelector) {
         throw new Error(`La tabla de Educa tiene varias columnas editables: ${sheet.editableColumns.join(" | ")}. Indica en column cuál es la de la nota.`);
       }
       assertGroupAllowed(sheet, "preparar notas para este grupo");
-      const plan = buildPlan(sheet, inputs, config.grades, args.stage);
+      const plan = buildPlan(sheet, inputs, config.grades, args.stage, { overwriteComments: args.overwrite_comments });
       const scale = describeScale(sheet, config.grades, args.stage);
       const stored: StoredPlan = { id: randomUUID().slice(0, 8), column: args.column ?? null, createdAt: Date.now(), plan, filled: false };
       plans.set(stored.id, stored);
       if (args.response_format === "json") {
-        return json({ plan_id: stored.id, column: sheet.column, context: sheet.context ?? null, scale, summary: summarizePlan(plan), items: plan.items, rows_without_grade: plan.rowsWithoutGrade });
+        return json({ plan_id: stored.id, column: sheet.column, context: sheet.context ?? null, scale, summary: summarizePlan(plan), ...(plan.items.some(i => i.commentStatus) ? { comments: summarizeComments(plan) } : {}), items: plan.items, rows_without_grade: plan.rowsWithoutGrade });
       }
       return text(planMarkdown({ ...stored, column: sheet.column }, sheet, scale));
     }
@@ -517,7 +572,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
     "educa_fill_grades",
     {
       title: "Escribir las notas (sin guardar)",
-      description: `Escribe en los campos de Educa las notas de un plan de educa_preview_grades, solo las marcadas "se escribirá". NO guarda: los cambios quedan en pantalla para que el profesor los revise (en el Cuaderno de aula de Educa-Gestión aparecen los botones Aceptar/Cancelar; se guarda después con educa_save_grades). Comprueba antes que la tabla sigue siendo la misma (mismos alumnos) y después relee cada campo.
+      description: `Escribe en los campos de Educa las notas (y observaciones para las familias, si el plan las trae) de un plan de educa_preview_grades, solo las marcadas "se escribirá". NO guarda: los cambios quedan en pantalla para que el profesor los revise (en el Cuaderno de aula de Educa-Gestión aparecen los botones Aceptar/Cancelar; se guarda después con educa_save_grades). Comprueba antes que la tabla sigue siendo la misma (mismos alumnos) y después relee cada campo.
 
 Úsala solo después de que el profesor haya visto la vista previa y dado el visto bueno.`,
       inputSchema: z.strictObject({
@@ -538,32 +593,45 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
         throw new Error("En esta pantalla de Educa no hay botón Guardar: cada nota queda guardada en cuanto se elige. Enseña la vista previa al profesor y, solo si autoriza expresamente guardar, vuelve a llamar con confirm_autosave=true.");
       }
       assertGroupAllowed(sheet, "escribir notas en este grupo");
-      const todo = stored.plan.items.filter(i => i.status === "cambia" && (include_fuzzy || !i.fuzzyMatch));
+      const todo = stored.plan.items.filter(i => hasWork(i) && (include_fuzzy || !i.fuzzyMatch));
       // La tabla debe seguir teniendo a los mismos alumnos en las mismas filas
       for (const item of todo) {
         const row = sheet.rows.find(r => r.index === item.rowIndex);
-        if (!row || row.name !== item.educaName || !row.field) {
+        if (!row || row.name !== item.educaName || (item.status === "cambia" && !row.field) || (item.commentStatus === "cambia" && !row.comment)) {
           throw new Error(`La tabla de Educa ha cambiado desde la vista previa (no encuentro a ${item.educaName} en su fila). ¿Has cambiado de grupo, materia o evaluación? Vuelve a hacer educa_preview_grades.`);
         }
       }
 
-      const results: { student: string; educaName: string; wanted: string; ok: boolean; note?: string }[] = [];
-      for (const item of todo) {
-        let row = sheet.rows.find(r => r.name === item.educaName)!;
+      type Result = { educaName: string; kind: "nota" | "observaciones"; ok: boolean; note?: string };
+      const results: Result[] = [];
+      // Escribe un campo; si la página se ha recargado tras un cambio (formularios con postback), relee y reintenta
+      const write = async (item: PlanItem, kind: Result["kind"]) => {
+        const attempt = async () => {
+          const row = sheet.rows.find(r => r.name === item.educaName);
+          if (kind === "nota") {
+            if (!row?.field) return false;
+            await browser.setField(row.field.key, row.field.tag, item.newValue!);
+          } else {
+            if (!row?.comment) return false;
+            await browser.setComment(row.comment.key, item.comment!);
+          }
+          return true;
+        };
         try {
-          await browser.setField(row.field!.key, row.field!.tag, item.newValue!);
+          if (!(await attempt())) throw new FieldGone(item.educaName!);
         } catch (e) {
           if (!(e instanceof FieldGone)) throw e;
-          // La página se ha recargado tras un cambio (formularios con postback): relee y reintenta
           sheet = await browser.readGradeSheet(stored.column ?? undefined);
-          row = sheet.rows.find(r => r.name === item.educaName)!;
-          if (!row?.field) {
-            results.push({ student: item.student, educaName: item.educaName!, wanted: item.newDisplay!, ok: false, note: "la fila desapareció tras recargar" });
-            continue;
+          if (!(await attempt())) {
+            results.push({ educaName: item.educaName!, kind, ok: false, note: "la fila desapareció tras recargar" });
+            return;
           }
-          await browser.setField(row.field.key, row.field.tag, item.newValue!);
         }
-        results.push({ student: item.student, educaName: item.educaName!, wanted: item.newDisplay!, ok: true });
+        results.push({ educaName: item.educaName!, kind, ok: true });
+      };
+      for (const item of todo) {
+        if (item.status === "cambia") await write(item, "nota");
+        if (item.commentStatus === "cambia") await write(item, "observaciones");
       }
 
       // Verificación final releyendo la tabla
@@ -571,20 +639,31 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       for (const r of results.filter(x => x.ok)) {
         const item = todo.find(i => i.educaName === r.educaName)!;
         const row = sheet.rows.find(x => x.name === r.educaName);
-        if (!row?.field || row.field.value !== item.newValue) {
+        if (r.kind === "nota" && (!row?.field || !sameValue(row.field.value, item.newValue))) {
           r.ok = false;
-          r.note = `tras escribir, el campo muestra "${row?.field?.valueText ?? "?"}"`;
+          r.note = `tras escribir, el campo de nota muestra "${row?.field?.valueText.trim() ?? "?"}"`;
+        }
+        if (r.kind === "observaciones" && cleanComment(row?.comment?.value ?? "") !== item.comment) {
+          r.ok = false;
+          r.note = "tras escribir, el cuadro de observaciones no muestra el texto completo";
         }
       }
       stored.filled = true;
       lastFilledPlan = stored;
 
-      const ok = results.filter(r => r.ok).length;
-      const skippedFuzzy = stored.plan.items.filter(i => i.status === "cambia" && i.fuzzyMatch && !include_fuzzy).length;
-      const lines = [sheet.autoSaves ? `Puestas ${ok} de ${todo.length} notas. **Esta pantalla guarda cada nota al elegirla, así que ya están guardadas en Educa** (sin publicar ni cerrar la evaluación).` : `Escritas ${ok} de ${todo.length} notas en pantalla. **Todavía no se ha guardado nada en Educa.**`];
-      for (const r of results.filter(x => !x.ok)) lines.push(`- ❌ ${r.educaName}: ${r.note}`);
+      const grades = results.filter(r => r.kind === "nota");
+      const comments = results.filter(r => r.kind === "observaciones");
+      const ok = grades.filter(r => r.ok).length;
+      const okComments = comments.filter(r => r.ok).length;
+      const skippedFuzzy = stored.plan.items.filter(i => hasWork(i) && i.fuzzyMatch && !include_fuzzy).length;
+      const what = `${ok} de ${grades.length} notas${comments.length ? ` y ${okComments} de ${comments.length} observaciones` : ""}`;
+      const lines = [sheet.autoSaves ? `Puestas ${what}. **Esta pantalla guarda cada nota al elegirla, así que ya están guardadas en Educa** (sin publicar ni cerrar la evaluación).` : `Escritas ${what} en pantalla. **Todavía no se ha guardado nada en Educa.**`];
+      for (const r of results.filter(x => !x.ok)) lines.push(`- ❌ ${r.educaName} (${r.kind}): ${r.note}`);
       if (skippedFuzzy) lines.push(`- ${skippedFuzzy} filas con nombre aproximado no se han tocado (include_fuzzy=false).`);
       if (sheet.autoSaves) return text(lines.join("\n"));
+      if (okComments && (await browser.hasPendingChanges()) === false) {
+        lines.push("- ⚠️ He escrito observaciones pero no aparecen los botones Aceptar/Cancelar. Pide al profesor que mire la ventana: puede que Educa necesite otro paso para guardarlas.");
+      }
       lines.push("", "Pide al profesor que revise la pantalla. Si está conforme, llama a educa_save_grades con confirm=true; si no, puede recargar la página en Educa para descartar los cambios.");
       return text(lines.join("\n"));
     }
@@ -594,7 +673,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
     "educa_save_grades",
     {
       title: "Guardar las notas en Educa",
-      description: `Pulsa el botón Guardar/Grabar de la pantalla de calificaciones para que Educa registre las notas escritas con educa_fill_grades. Hace una captura antes y otra después y devuelve el mensaje que muestre Educa.
+      description: `Pulsa el botón Guardar/Aceptar de la pantalla de calificaciones para que Educa registre las notas y observaciones escritas con educa_fill_grades. Hace una captura antes y otra después y devuelve el mensaje que muestre Educa.
 
 IMPORTANTE: llama solo cuando el profesor haya dicho expresamente que guarde, y pasa confirm=true. No cierra ni firma la evaluación (eso debe hacerlo el profesor a mano).`,
       inputSchema: z.strictObject({
