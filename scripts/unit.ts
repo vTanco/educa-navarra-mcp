@@ -4,7 +4,8 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import ExcelJS from "exceljs";
-import { blockedGroup, buildPlan, describeScale, detectStage, parseCsv, parseGradesFile, resolveGrade, termCode, type GradeSheet, type SheetField } from "../src/grades.js";
+import { writeFileSync } from "node:fs";
+import { blockedGroup, buildPlan, cleanComment, describeScale, detectStage, parseCsv, parseGradesFile, resolveGrade, sameValue, summarizeComments, termCode, type GradeSheet, type SheetField } from "../src/grades.js";
 
 const cfg = { min: 1, max: 10, integerOnly: true, decimalSeparator: "," as const, extraValues: ["NP"] };
 
@@ -71,4 +72,32 @@ const row = (index: number, name: string) => ({ index, name, field: { ...input, 
 const sheet: GradeSheet = { frameUrl: "", headers: [], column: "Nota", editableColumns: ["Nota"], rows: [row(0, "Sanz Ruiz, Ana"), row(1, "Sanz Ruiz, Ana María"), row(2, "Goñi Lasa, Unai")] };
 const plan = buildPlan(sheet, [{ student: "Ana Sanz", grade: "6" }, { student: "Unai Goñi Lasa", grade: "5" }, { student: "Goñi Lasa, Unai", grade: "6" }], cfg);
 assert.deepEqual(plan.items.map(i => i.status), ["ambigua", "duplicada", "duplicada"]);
+
+// Ceros con espacio final ("0 "), coma decimal y mayúsculas
+assert.equal(sameValue("0 ", "0"), true);
+assert.equal(sameValue("7,0", "7"), true);
+assert.equal(sameValue("sb", "SB"), true);
+assert.equal(sameValue("", "0"), false);
+const zeroRow: GradeSheet = { frameUrl: "", headers: [], column: "1Ev", editableColumns: ["1Ev"], rows: [{ index: 0, name: "Goñi Lasa, Unai", field: { ...input, value: "0 ", valueText: "0 " } }] };
+assert.equal(buildPlan(zeroRow, [{ student: "Goñi Lasa, Unai", grade: "0" }], zero, "bachillerato").items[0].status, "igual");
+
+// Observaciones para las familias: columna opcional, filas solo con observación y texto ya existente
+writeFileSync(join(dir, "obs.csv"), 'Apellidos;Nombre;Nota;Comentario para las familias\nGoñi Lasa;Unai;6;"Buen trimestre.\r\nSigue así."\nSanz Ruiz;Ana;;Revisar ortografía\nPérez;Iker;;\n');
+const o = await parseGradesFile(join(dir, "obs.csv"));
+assert.equal(o.commentColumn, "Comentario para las familias");
+assert.deepEqual(o.grades, [{ student: "Goñi Lasa, Unai", grade: "6", comment: "Buen trimestre.\nSigue así." }, { student: "Sanz Ruiz, Ana", grade: "", comment: "Revisar ortografía" }]);
+assert.deepEqual(o.skipped, ["Pérez, Iker"]);
+assert.equal(cleanComment("  hola  \r\n adiós "), "hola\n adiós");
+const withObs: GradeSheet = { frameUrl: "", headers: [], column: "Nota", editableColumns: ["Nota"], rows: [
+  { ...row(0, "Goñi Lasa, Unai"), comment: { key: "c0", value: "", disabled: false, maxLength: 20 } },
+  { ...row(1, "Sanz Ruiz, Ana"), comment: { key: "c1", value: "Ya escrita", disabled: false, maxLength: 20 } },
+  { ...row(2, "Ruiz Arana, Pablo"), comment: { key: "c2", value: "", disabled: false, maxLength: 20 } },
+  { ...row(3, "Lasa Goñi, Iker"), comment: null }
+] };
+const obsInputs = [{ student: "Unai Goñi Lasa", grade: "6", comment: "Bien" }, { student: "Ana Sanz Ruiz", grade: "", comment: "Otra" }, { student: "Pablo Ruiz Arana", grade: "7", comment: "x".repeat(21) }, { student: "Iker Lasa Goñi", grade: "5", comment: "Hola" }];
+const op = buildPlan(withObs, obsInputs, cfg);
+assert.deepEqual(op.items.map(i => [i.status, i.commentStatus]), [["cambia", "cambia"], ["sin_nota", "conserva"], ["cambia", "no_valida"], ["cambia", "sin_campo"]]);
+assert.deepEqual(summarizeComments(op), { cambia: 1, igual: 0, conserva: 1, no_valida: 1, bloqueado: 0, sin_campo: 1 });
+assert.equal(buildPlan(withObs, obsInputs, cfg, undefined, { overwriteComments: true }).items[1].commentStatus, "cambia");
+assert.deepEqual(op.rowsWithoutGrade, ["Sanz Ruiz, Ana"]);
 console.error("✅ Pruebas unitarias superadas");

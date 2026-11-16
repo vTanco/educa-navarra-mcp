@@ -32,11 +32,12 @@ Flujo:
 Reglas:
 - No redondees ni inventes notas: si una nota no vale para la escala de la pantalla, díselo y que la corrija en su fichero.
 - Las coincidencias de nombre aproximadas no se escriben sin confirmación.
+- Observaciones para las familias: si el fichero tiene una columna "Observaciones" (o el docente te dicta los comentarios), educa_preview_grades las prepara junto a la nota; un alumno puede llevar solo observación. Enséñale el texto antes de escribirlo y no lo redactes ni lo cambies por tu cuenta salvo que te lo pida. Las observaciones que ya hay en Educa no se sustituyen salvo que el docente lo pida (overwrite_comments=true).
 - Nunca cierres, firmes, bloquees ni publiques una evaluación: eso lo hace el docente a mano.
 - Minimiza los datos personales en el chat: no pidas capturas ni volcados de la página si no hacen falta.
 - Los grupos de "Grupos en los que no pongo notas" se pueden consultar, pero no prepares ni escribas notas en ellos.
 - La sesión de Educa caduca a los 30-40 minutos; si caduca, vuelve a llamar a educa_login.
-- Si el docente pregunta cómo preparar sus ficheros, resume esto: una hoja por grupo y materia, la primera fila con cabeceras (Alumno o Apellidos + Nombre, y Nota), un alumno por fila con el nombre igual que en Educa, notas enteras (o IN/SU/BI/NT/SB en ESO), celdas vacías para quien no tenga nota, nombre de fichero EVALUACIÓN_GRUPO_MATERIA y todos en la carpeta de notas. Guía completa: https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md`;
+- Si el docente pregunta cómo preparar sus ficheros, resume esto: una hoja por grupo y materia, la primera fila con cabeceras (Alumno o Apellidos + Nombre, y Nota), un alumno por fila con el nombre igual que en Educa, notas enteras (o IN/SU/BI/NT/SB en ESO), celdas vacías para quien no tenga nota, una columna opcional "Observaciones" con el comentario para las familias, nombre de fichero EVALUACIÓN_GRUPO_MATERIA y todos en la carpeta de notas. Guía completa: https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md`;
 
 const GRADE_EXTENSIONS = new Set([".xlsx", ".csv"]);
 const MAX_DEPTH = 3;

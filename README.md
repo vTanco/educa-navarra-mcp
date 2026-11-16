@@ -37,6 +37,7 @@ Tú revisas la pantalla y decides cuándo se guardan.
 | **Cruza los nombres** | Empareja tu lista con la de Educa aunque cambien tildes, mayúsculas o el orden de nombre y apellidos. |
 | **Enseña una vista previa** | Nota actual, nota nueva y avisos, antes de tocar nada. |
 | **Escribe sin guardar** | Rellena las notas en la ventana de Educa para que las revises. |
+| **Añade observaciones** | Si tu fichero tiene una columna *Observaciones*, escribe también el comentario para las familias de cada alumno. |
 | **Guarda solo si lo dices** | Pulsa *Aceptar* únicamente cuando lo confirmas en el chat. |
 
 Sirve para **ESO** (IN, SU, BI, NT, SB), **Bachillerato** (nota sobre 10) y **FP de Grado Medio y Superior**: lee la escala de cada pantalla en vez de suponerla.
@@ -120,6 +121,7 @@ El cierre y la firma de la evaluación los sigues haciendo tú a mano, como siem
 | Consultar sin tocar | *"Enséñame las notas de ESO 3ºDEFH, Matemáticas. No cambies nada."* |
 | Ver qué ficheros tienes | *"¿Qué ficheros de notas tengo?"* |
 | Usar otra columna | *"La nota está en la columna Media T1."* |
+| Poner comentarios para las familias | *"Mete también las observaciones de la columna Comentarios."* |
 | Aceptar un nombre dudoso | *"Sí, Maite Etxeberria es la misma."* |
 | Ver la pantalla | *"Haz una captura de la pantalla."* |
 | Aprender a preparar el Excel | *"¿Cómo preparo mi Excel de notas?"* |
@@ -156,6 +158,7 @@ Vale casi cualquier Excel (`.xlsx`) o CSV con una fila por alumno y una columna 
 
 - Si tus columnas se llaman de otra forma, díselo: *"la nota está en la columna Media T1"*.
 - Los alumnos con la nota en blanco se saltan.
+- **Observaciones para las familias (opcional).** Añade una columna *Observaciones* con el comentario de cada alumno y Claude lo escribirá en el cuadro de observaciones de Educa (hasta 4000 caracteres). Puedes dejar la nota vacía y poner solo la observación. Si un alumno ya tiene observaciones en Educa, no se sustituyen salvo que lo pidas.
 - **No redondea por ti**: si una nota no vale para esa enseñanza, avisa y no la escribe.
 
 Todos los consejos, con ejemplos para interinos que cambian de centro, en la **[guía para preparar los Excel](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md)**.
@@ -165,6 +168,8 @@ Todos los consejos, con ejemplos para interinos que cambian de centro, en la **[
 <p align="center">
   <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/vista-previa.svg" width="100%" alt="Ejemplo de vista previa con datos inventados: tabla con alumno en el fichero, alumno en Educa, nota actual, nota nueva y estado.">
 </p>
+
+Si el fichero trae observaciones, la vista previa añade una columna con el texto que se escribirá para cada alumno.
 
 Los nombres que solo coinciden en parte se marcan como *aproximados* y no se escriben salvo que lo confirmes. También avisa de alumnos del fichero que no están en Educa y de alumnos de Educa que no tienen nota en el fichero.
 
@@ -205,6 +210,8 @@ Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachill
 | Detectar la escala | Probado en Educa real (términos) | Probado en Educa real (0 a 10) | Solo simulador |
 | Escribir en pantalla, sin guardar | Probado en Educa real | Probado en Educa real | Solo simulador |
 | Pulsar *Aceptar* para guardar | Solo simulador | Solo simulador | Solo simulador |
+| Leer el cuadro de observaciones | Solo simulador | Probado en Educa real | Solo simulador |
+| Escribir observaciones | Solo simulador | Solo simulador | Solo simulador |
 
 En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Aceptar* y *Cancelar* y no guarda hasta pulsar uno de los dos; el guardado definitivo se ha dejado para cuando un docente lo haga con sus propias notas. ¿Lo has usado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
 
@@ -213,7 +220,7 @@ En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Acep
 - **Se ejecuta en tu ordenador.** No hay ningún servidor intermedio: el conector maneja un navegador en tu equipo, como harías tú.
 - **Tu contraseña no pasa por el chat.** Se guarda en tu ordenador y solo se escribe en el formulario de acceso de Educa.
 - **Solo visita Educa** (`*.navarra.es`). Cualquier otra dirección se bloquea.
-- **Ojo:** los nombres y notas que aparecen en la vista previa sí pasan por la conversación con la IA. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
+- **Ojo:** los nombres, notas y observaciones que aparecen en la vista previa sí pasan por la conversación con la IA. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
 ## Preguntas frecuentes
 

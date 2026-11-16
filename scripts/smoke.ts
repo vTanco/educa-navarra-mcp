@@ -70,8 +70,10 @@ try {
   await call("educa_inspect_page");
   assert.match(textOf(await call("educa_dump_html", { frame_url_contains: "notas" })), /formcontrolname|name="nota_1001"/);
 
-  const ambiguous = await call("educa_read_grade_sheet");
-  assert.match(textOf(ambiguous), /varias columnas editables/);
+  // La columna "Observaciones" no compite con la de la nota: se elige sola "Nota final"
+  const auto = await call("educa_read_grade_sheet", { response_format: "json" });
+  assert.equal((auto.structuredContent as { column: string; comments_available: boolean }).column, "Nota final");
+  assert.equal((auto.structuredContent as { comments_available: boolean }).comments_available, true);
   const sheet = await call("educa_read_grade_sheet", { column: "nota", response_format: "json" });
   assert.equal((sheet.structuredContent as { students: unknown[] }).students.length, 6);
 
@@ -80,7 +82,7 @@ try {
 
   const preview = await call("educa_preview_grades", { file_path: resolve("test/mock/notas.csv"), column: "Nota final", response_format: "json" });
   const p = preview.structuredContent as { plan_id: string; summary: Record<string, number>; items: { student: string; status: string; fuzzyMatch?: boolean }[]; rows_without_grade: string[] };
-  assert.deepEqual(p.summary, { cambia: 3, igual: 0, sin_coincidencia: 1, ambigua: 0, nota_no_valida: 1, campo_bloqueado: 1, duplicada: 0 });
+  assert.deepEqual(p.summary, { cambia: 3, igual: 0, sin_nota: 0, sin_coincidencia: 1, ambigua: 0, nota_no_valida: 1, campo_bloqueado: 1, duplicada: 0 });
   assert.equal(p.items.find(i => i.student.startsWith("Etxeberria"))?.fuzzyMatch, true);
   assert.deepEqual(p.rows_without_grade, ["Ruiz Arana, Pablo"]);
   await call("educa_preview_grades", { file_path: resolve("test/mock/notas.csv"), column: "Nota final" }); // versión markdown
@@ -113,8 +115,41 @@ try {
   await call("educa_save_grades", { confirm: true });
   assert.deepEqual(saved["cuaderno"], { "1001": "NT", "1002": "SU", "1006": "IN" });
 
+  // --- Observaciones para las familias (cuadro de texto libre bajo cada alumno, como en Educa-Gestión)
+  for (const k of Object.keys(saved)) delete saved[k];
+  saved["observaciones"] = { "1003": "Texto que ya había escrito el profesor." };
+  await call("educa_navigate", { url: url + "cuaderno" });
+  const ro = (await call("educa_read_grade_sheet", { response_format: "json" })).structuredContent as { comments_available: boolean; students: { comment?: string }[] };
+  assert.equal(ro.comments_available, true);
+  assert.equal(ro.students[2].comment, "Texto que ya había escrito el profesor.");
+  const obsCsv = join(home, "obs.csv");
+  writeFileSync(obsCsv, 'Alumno;Nota;Observaciones\n"García López, Ana";9;"Excelente trabajo; sigue así."\nPérez Martínez, Iñigo;;"Debe entregar las tareas a tiempo."\nEtxeberria Goñi, Maite;6;Otro comentario\nLópez Sanz, Marta;;Comentario\nRuiz Arana, Pablo;5;\n');
+  const lf = (await call("educa_load_grades_file", { file_path: obsCsv })).structuredContent as { comment_column: string; with_comment: number; count: number };
+  assert.deepEqual([lf.comment_column, lf.with_comment, lf.count], ["Observaciones", 4, 5]);
+  const op = (await call("educa_preview_grades", { file_path: obsCsv, response_format: "json" })).structuredContent as { plan_id: string; summary: Record<string, number>; comments: Record<string, number> };
+  assert.equal(op.summary.cambia, 3);
+  assert.equal(op.summary.sin_nota, 2);
+  assert.deepEqual(op.comments, { cambia: 2, igual: 0, conserva: 1, no_valida: 0, bloqueado: 1, sin_campo: 0 });
+  assert.match(textOf(await call("educa_preview_grades", { file_path: obsCsv })), /overwrite_comments=true/);
+  const ow = (await call("educa_preview_grades", { file_path: obsCsv, overwrite_comments: true, response_format: "json" })).structuredContent as { plan_id: string; comments: Record<string, number> };
+  assert.equal(ow.comments.cambia, 3);
+  await call("educa_fill_grades", { plan_id: op.plan_id });
+  assert.equal(saved["cuaderno"], undefined, "rellenar no guarda");
+  assert.deepEqual(saved["observaciones"], { "1003": "Texto que ya había escrito el profesor." });
+  await call("educa_save_grades", { confirm: true });
+  assert.deepEqual(saved["cuaderno"], { "1001": "SB", "1003": "BI", "1006": "SU" });
+  assert.deepEqual(saved["observaciones"], { "1001": "Excelente trabajo; sigue así.", "1002": "Debe entregar las tareas a tiempo.", "1003": "Texto que ya había escrito el profesor." });
+  // Una observación más larga que lo que admite Educa (4000 caracteres) se rechaza
+  const long = (await call("educa_preview_grades", { grades: [{ student: "Ruiz Arana, Pablo", comment: "x".repeat(4001) }], response_format: "json" })).structuredContent as { comments: Record<string, number> };
+  assert.equal(long.comments.no_valida, 1);
+
   // --- Bachillerato: nota numérica tecleada
   for (const k of Object.keys(saved)) delete saved[k];
+  saved["cuaderno"] = { "1004": "0" }; // Educa muestra los ceros como "0 "
+  await call("educa_navigate", { url: url + "cuaderno?bach=1" });
+  const zeroPlan = (await call("educa_preview_grades", { grades: [{ student: "Fernández de la Fuente, Jon", grade: "0" }], response_format: "json" })).structuredContent as { summary: Record<string, number> };
+  assert.equal(zeroPlan.summary.igual, 1, "un 0 que Educa muestra como \"0 \" ya está igual");
+  delete saved["cuaderno"];
   await call("educa_navigate", { url: url + "cuaderno?bach=1" });
   const bp = (await call("educa_preview_grades", { grades: [{ student: "Ana García López", grade: "8" }, { student: "Pérez Martínez, Iñigo", grade: "0" }, { student: "Ruiz Arana, Pablo", grade: "6,5" }, { student: "Etxeberria Goñi, Maite", grade: "NT" }], response_format: "json" })).structuredContent as { plan_id: string; summary: Record<string, number>; scale: { kind: string; stage: string; min: number; values: string[] } };
   assert.equal(bp.summary.cambia, 2);

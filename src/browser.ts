@@ -460,6 +460,30 @@ export class EducaBrowser {
     return after.inputValue();
   }
 
+  /** Escribe las observaciones de un alumno (sin guardar) y devuelve lo que queda en el cuadro. */
+  async setComment(key: string, value: string): Promise<string> {
+    const loc = await this.locateField(key);
+    if (!loc) throw new FieldGone(key);
+    await loc.scrollIntoViewIfNeeded().catch(() => undefined);
+    await loc.fill(value);
+    await loc.dispatchEvent("change");
+    await loc.blur();
+    await (await this.page()).waitForTimeout(300);
+    const after = await this.locateField(key);
+    return after ? after.inputValue() : value;
+  }
+
+  /** ¿Hay botones Aceptar/Cancelar visibles (cambios pendientes de guardar en Educa-Gestión)? */
+  async hasPendingChanges(): Promise<boolean | null> {
+    const page = await this.page();
+    for (const frame of page.frames()) {
+      const n = await frame.locator("lib-btn-aceptar-cancelar button").filter({ visible: true }).count().catch(() => 0);
+      if (n > 0) return true;
+    }
+    const cards = await page.locator(".listadoCalificaciones").count().catch(() => 0);
+    return cards > 0 ? false : null;
+  }
+
   async save(): Promise<{ button: string; message: string | null; outcome: "ok" | "error" | "desconocido" }> {
     const page = await this.page();
     const { buttonSelector, buttonTextPattern, successPattern, errorPattern } = this.config.save;
@@ -783,7 +807,9 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
           // Bachillerato: desplegable "editable", la nota numérica se teclea (el desplegable solo ofrece FPEX y similares)
           const key = `f${index}`;
           typed.setAttribute("data-educa-mcp", key);
-          field = { key, tag: "input", type: "p-select-editable", header: target!, value: typed.value, valueText: typed.value, disabled: typed.disabled || typed.readOnly || ps.classList.contains("p-disabled") };
+          // Educa muestra algunas notas con espacio final ("0 "): se guarda sin él para compararlas bien
+          const typedValue = typed.value.trim();
+          field = { key, tag: "input", type: "p-select-editable", header: target!, value: typedValue, valueText: typedValue, disabled: typed.disabled || typed.readOnly || ps.classList.contains("p-disabled") };
         } else if (ps) {
           const key = `f${index}`;
           ps.setAttribute("data-educa-mcp", key);
@@ -795,7 +821,19 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
           field = { key: `f${index}`, tag: "pselect", type: "solo-lectura", header: target!, value, valueText: value, disabled: true, options: [] };
         }
       }
-      return { index, name, ...(studentId ? { studentId } : {}), field };
+      // Observaciones para las familias: cuadro de texto libre bajo la tabla de cada alumno
+      // (app-detalle-calificacion > .caja "Observaciones" > lib-text-area textarea, hasta 4000 caracteres)
+      const areas = [...card.querySelectorAll<HTMLTextAreaElement>("app-detalle-calificacion textarea, .detalleCalificacion textarea")];
+      const area = areas.find(a => /observ/i.test(clean(a.closest(".caja")?.querySelector(".titulo")?.textContent))) ?? areas[0];
+      let comment: GradeSheet["rows"][number]["comment"] = null;
+      if (area) {
+        const key = `c${index}`;
+        area.setAttribute("data-educa-mcp", key);
+        const remaining = Number(/\d+/.exec(clean(area.parentElement?.querySelector(".numeroElementos")?.textContent))?.[0] ?? NaN);
+        const maxLength = area.maxLength > 0 ? area.maxLength : Number.isFinite(remaining) ? remaining + area.value.length : undefined;
+        comment = { key, value: area.value, disabled: area.disabled || area.readOnly, ...(maxLength ? { maxLength } : {}) };
+      }
+      return { index, name, ...(studentId ? { studentId } : {}), field, comment };
     });
     // Verificado en el Educa real: al cambiar una nota la celda queda "modificado" y aparecen Aceptar/Cancelar; no se guarda sola
     const ctx = [...document.querySelectorAll("app-selector-grupo-asignatura-anidado p-select [role=combobox]:not(.p-placeholder), app-selector-grupo-asignatura-anidado li[role=option][aria-selected=true], h1, h2, h3")]
@@ -854,16 +892,21 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
   rows.forEach(r => cellsWithPos(r).forEach(({ cell, pos }) => cell.querySelector(EDITABLE) && editablePositions.add(pos)));
   const editableColumns = [...editablePositions].sort((a, b) => a - b).map(p => headers[p] || `columna ${p + 1}`);
 
+  // Columna de observaciones (texto libre): no es candidata a nota
+  const commentPositions = [...editablePositions].filter(p => /observ|coment/.test(norm(headers[p] ?? "")));
+  const gradePositions = [...editablePositions].filter(p => !commentPositions.includes(p));
+
   let targetPos: number | null = null;
   if (!sel.gradeFieldSelector) {
     if (column) {
       const wanted = norm(column);
       const hit = [...editablePositions].find(p => norm(headers[p] || `columna ${p + 1}`).includes(wanted));
       targetPos = hit ?? null;
-    } else if (editablePositions.size === 1) {
-      targetPos = [...editablePositions][0];
+    } else if (gradePositions.length === 1) {
+      targetPos = gradePositions[0];
     }
   }
+  const commentPos = commentPositions.find(p => p !== targetPos) ?? null;
 
   const out: GradeSheet["rows"] = [];
   rows.forEach((row, index) => {
@@ -910,7 +953,16 @@ function extractGradeSheet({ sel, column }: ExtractArgs): Omit<GradeSheet, "fram
         ...(isSelect ? { options: [...(el as HTMLSelectElement).options].map(o => ({ value: o.value, text: clean(o.textContent) })) } : {})
       };
     }
-    if (name || field) out.push({ index, name, ...(studentId ? { studentId } : {}), field });
+    let comment: GradeSheet["rows"][number]["comment"] = null;
+    if (commentPos !== null) {
+      const area = cells.find(c => c.pos === commentPos)?.cell.querySelector<HTMLTextAreaElement | HTMLInputElement>("textarea, input[type=text], input:not([type])");
+      if (area) {
+        const key = `c${index}`;
+        area.setAttribute("data-educa-mcp", key);
+        comment = { key, value: area.value, disabled: area.disabled || area.readOnly, ...(area.maxLength > 0 ? { maxLength: area.maxLength } : {}) };
+      }
+    }
+    if (name || field) out.push({ index, name, ...(studentId ? { studentId } : {}), field, comment });
   });
 
   const column_ = sel.gradeFieldSelector ? out.find(r => r.field)?.field?.header ?? null : targetPos !== null ? headers[targetPos] || `columna ${targetPos + 1}` : null;
