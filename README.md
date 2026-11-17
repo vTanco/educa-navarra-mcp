@@ -243,7 +243,7 @@ Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachill
 |---|---|
 | Abrir *Nuevo informe*, elegir grupo y alumno | Probado en Educa real |
 | Leer espacios, sesiones del alumno, conductas y medidas | Probado en Educa real |
-| Rellenar el formulario en pantalla | Solo simulador (en el Educa real se han elegido a mano fecha, espacio, sesión y conducta, sin guardar) |
+| Rellenar el formulario en pantalla, sin guardar | Probado en Educa real (ESO) |
 | Pulsar *Guardar* o *Guardar y enviar* | Solo simulador |
 
 En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Aceptar* y *Cancelar* y no guarda hasta pulsar uno de los dos; el guardado definitivo se ha dejado para cuando un docente lo haga con sus propias notas. ¿Lo has usado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
