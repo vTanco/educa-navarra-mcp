@@ -5,7 +5,7 @@
 # Educa Navarra · notas con IA
 
 **Pásale tu Excel de notas a Claude y él las mete en Educa por ti.**<br>
-También redacta y registra partes de convivencia. Tú revisas la pantalla y decides cuándo se guarda.
+También escribe las observaciones para las familias y redacta y registra partes de convivencia. Tú revisas la pantalla y decides cuándo se guarda.
 
 [![npm](https://img.shields.io/npm/v/educa-navarra-mcp?color=B5121B&label=npm)](https://www.npmjs.com/package/educa-navarra-mcp)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-1E8E3E)](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE)
@@ -18,11 +18,12 @@ También redacta y registra partes de convivencia. Tú revisas la pantalla y dec
 [Partes de convivencia](#partes-de-convivencia) ·
 [Preparar el Excel](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md) ·
 [Qué se ha probado](#qué-se-ha-probado) ·
+[Protección de datos](#protección-de-datos) ·
 [Preguntas](#preguntas-frecuentes)
 
 </div>
 
-> **Herramienta no oficial.** No está hecha ni respaldada por el Gobierno de Navarra ni por el Departamento de Educación. Usas tu propia cuenta de Educa y eres responsable de las notas que guardes. Lee el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md) antes de usarla.
+> **Herramienta personal y no oficial.** No tiene ningún vínculo con el Departamento de Educación del Gobierno de Navarra. Los datos del alumnado que el conector lee o muestra pasan por Claude. Antes de usarla, lee [Protección de datos](#protección-de-datos) y el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/flujo.svg" width="100%" alt="Cinco pasos: tu Excel, vista previa, escribe en pantalla sin guardar, tú revisas y pulsa Aceptar solo si lo confirmas.">
@@ -248,12 +249,20 @@ Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachill
 
 En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Aceptar* y *Cancelar* y no guarda hasta pulsar uno de los dos; el guardado definitivo se ha dejado para cuando un docente lo haga con sus propias notas. ¿Lo has usado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
 
-## Privacidad
+## Protección de datos
 
-- **Se ejecuta en tu ordenador.** No hay ningún servidor intermedio: el conector maneja un navegador en tu equipo, como harías tú.
+Léelo antes de usar el conector con datos reales.
+
+- **Herramienta personal y no oficial.** La ha hecho un docente por su cuenta. No está desarrollada, respaldada ni supervisada por el Departamento de Educación del Gobierno de Navarra, ni tiene vínculo alguno con él.
+- **Los datos pasan por Claude.** Todo lo que el conector lee o muestra (nombres del alumnado, notas, observaciones para las familias, relatos de partes de convivencia) y lo que tú cuentes en el chat se envía a Claude como parte de la conversación, y puede quedar guardado en tu historial de conversaciones.
+- **Tú decides si puedes usarla.** Cada docente la usa bajo su propia responsabilidad y conforme a las normas de su centro y a las indicaciones de la persona delegada de protección de datos (DPD) del Departamento de Educación. Si tienes dudas, consúltalo antes.
+- **Desactiva el entrenamiento.** En Claude, ve a **Ajustes → Privacidad** y desactiva la opción que permite usar tus conversaciones para mejorar los modelos (*Ayudar a mejorar Claude*).
+- **El desarrollador no recibe nada.** No hay servidores propios: el conector se ejecuta en tu ordenador, solo visita Educa (`*.navarra.es`) y no recoge credenciales, datos del alumnado ni estadísticas de uso.
 - **Tu contraseña no pasa por el chat.** Se guarda en tu ordenador y solo se escribe en el formulario de acceso de Educa.
-- **Solo visita Educa** (`*.navarra.es`). Cualquier otra dirección se bloquea.
-- **Ojo:** los nombres, notas y observaciones que aparecen en la vista previa sí pasan por la conversación con la IA, y también lo que cuentes para redactar un parte. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
+- **Comparte lo mínimo.** Usa ficheros con solo las columnas necesarias, no pidas capturas si no hacen falta y, en los partes, cuenta solo los hechos necesarios, sin nombres de otros alumnos.
+- **Sin garantía.** Se distribuye con [licencia MIT](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE), tal cual y sin garantía de ningún tipo. Revisa siempre la pantalla de Educa antes de guardar.
+
+Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
 ## Preguntas frecuentes
 
@@ -315,4 +324,4 @@ npm run pack:mcpb # genera build/educa-navarra-mcp.mcpb para Claude Desktop
 
 ---
 
-<sub>Licencia [MIT](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE). Proyecto independiente y sin ánimo de lucro, sin relación con el Gobierno de Navarra. "Educa" es el nombre del portal educativo del Gobierno de Navarra y se usa solo para describir con qué funciona esta herramienta.</sub>
+<sub>Licencia [MIT](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE). Proyecto personal, independiente y sin ánimo de lucro, sin relación con el Departamento de Educación del Gobierno de Navarra. "Educa" es el nombre del portal educativo del Gobierno de Navarra y se usa solo para describir con qué funciona esta herramienta.</sub>
