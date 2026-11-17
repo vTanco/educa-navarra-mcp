@@ -2,7 +2,7 @@
 
 Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 
-## 1.3.0 · sin publicar
+## 1.3.0 · 2026-11-17
 
 - Partes de convivencia: Claude redacta el informe con tono formal a partir de lo que cuente el docente, propone el tipo de conducta con su artículo del Decreto Foral 47/2010 de Navarra y lo registra en Educa-Gestión → Gestión académica → Convivencia. Tres herramientas nuevas: `educa_preview_incident` (abre el formulario del alumno, lee espacios y conductas de Educa y enseña el parte completo, sin escribir nada), `educa_fill_incident` (rellena fecha, espacio, sesión, relato, contacto con la familia, conducta y medida, sin guardar) y `educa_save_incident` (pulsa *Guardar* para dejarlo en borrador, o *Guardar y enviar* si se pide, solo con `confirm=true`).
 - La sesión se elige sola cuando el docente da una única clase a ese alumno ese día; si no, se pide la hora.
