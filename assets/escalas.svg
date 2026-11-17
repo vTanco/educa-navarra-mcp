@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 458" width="960" height="458" role="img" aria-labelledby="t d">
+  <title id="t">Escalas por etapa</title>
+  <desc id="d">ESO: 0 a 4 IN, 5 SU, 6 BI, 7 y 8 NT, 9 y 10 SB, o el término. Bachillerato: entero de 0 a 10. FP: entero de 1 a 10. Apto o No apto: solo el término. No redondea.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; }
+    .you { fill: #fff5f5; stroke: #B5121B; }
+    .box { fill: none; stroke: #8c959f; stroke-dasharray: 5 4; }
+    .num { fill: #57606a; } .numyou { fill: #B5121B; }
+    .n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .h { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .m { fill: #57606a; font-size: 13px; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .line { stroke: #d0d7de; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .warnline { stroke: #B5121B; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .ok { fill: #1a7f37; } .bad { fill: #B5121B; } .grey { fill: #8c959f; }
+    .accent { fill: #B5121B; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .box { stroke: #6e7681; }
+      .num { fill: #6e7681; } .numyou, .accent { fill: #e5534b; }
+      .h, .t, .td, .b { fill: #e6edf3; }
+      .s, .m, .th { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .line { stroke: #30363d; }
+      .arrow { stroke: #6e7681; }
+      .warnline { stroke: #e5534b; }
+      .ok { fill: #3fb950; } .bad { fill: #e5534b; } .grey { fill: #6e7681; }
+    }
+
+    .c0 { fill: #fbe9ea; } .c1 { fill: #eef6f0; } .c2 { fill: #ddefe2; } .c3 { fill: #c3e4cc; } .c4 { fill: #a3d6b1; }
+    .cx { fill: #f6f8fa; } .cell { stroke: #ffffff; stroke-width: 2; }
+    .lab { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .lab0 { fill: #B5121B; font-size: 13px; font-weight: 600; }
+    .dig { fill: #57606a; font-size: 12px; }
+    @media (prefers-color-scheme: dark) {
+      .c0 { fill: #3d1d20; } .c1 { fill: #16291d; } .c2 { fill: #1b3a25; } .c3 { fill: #20512f; } .c4 { fill: #26683a; }
+      .cx { fill: #161b22; } .cell { stroke: #0d1117; }
+      .lab { fill: #e6edf3; } .lab0 { fill: #ff7b72; } .dig { fill: #8d96a0; }
+    }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="457" rx="12"/>
+  <text class="t" x="28" y="42">Qué nota acepta en cada pantalla</text>
+  <text class="m" x="28" y="66">El conector lee la escala de la pantalla de Educa abierta. No la supone por la etapa.</text>
+  <text class="dig" x="268" y="100" text-anchor="middle">0</text>
+  <text class="dig" x="332" y="100" text-anchor="middle">1</text>
+  <text class="dig" x="396" y="100" text-anchor="middle">2</text>
+  <text class="dig" x="460" y="100" text-anchor="middle">3</text>
+  <text class="dig" x="524" y="100" text-anchor="middle">4</text>
+  <text class="dig" x="588" y="100" text-anchor="middle">5</text>
+  <text class="dig" x="652" y="100" text-anchor="middle">6</text>
+  <text class="dig" x="716" y="100" text-anchor="middle">7</text>
+  <text class="dig" x="780" y="100" text-anchor="middle">8</text>
+  <text class="dig" x="844" y="100" text-anchor="middle">9</text>
+  <text class="dig" x="908" y="100" text-anchor="middle">10</text>
+  <text class="h" x="28" y="134">ESO</text>
+  <text class="s" x="28" y="152">Desplegable con términos</text>
+  <rect class="c0 cell" x="236" y="112" width="320" height="48" rx="6"/>
+  <text class="lab0" x="396" y="141" text-anchor="middle">IN · Insuficiente</text>
+  <rect class="c1 cell" x="556" y="112" width="64" height="48" rx="6"/>
+  <text class="lab" x="588" y="141" text-anchor="middle">SU</text>
+  <rect class="c2 cell" x="620" y="112" width="64" height="48" rx="6"/>
+  <text class="lab" x="652" y="141" text-anchor="middle">BI</text>
+  <rect class="c3 cell" x="684" y="112" width="128" height="48" rx="6"/>
+  <text class="lab" x="748" y="141" text-anchor="middle">NT · Notable</text>
+  <rect class="c4 cell" x="812" y="112" width="128" height="48" rx="6"/>
+  <text class="lab" x="876" y="141" text-anchor="middle">SB · Sobresaliente</text>
+  <text class="h" x="28" y="202">Bachillerato</text>
+  <text class="s" x="28" y="220">Nota tecleada</text>
+  <rect class="c0 cell" x="236" y="180" width="320" height="48" rx="6"/>
+  <text class="lab0" x="396" y="209" text-anchor="middle">0 a 4</text>
+  <rect class="c3 cell" x="556" y="180" width="384" height="48" rx="6"/>
+  <text class="lab" x="748" y="209" text-anchor="middle">5 a 10</text>
+  <text class="h" x="28" y="270">FP</text>
+  <text class="s" x="28" y="288">Nota tecleada en un ciclo</text>
+  <rect class="cx cell" x="236" y="248" width="64" height="48" rx="6"/>
+  <text class="dig" x="268" y="277" text-anchor="middle">no</text>
+  <rect class="c0 cell" x="300" y="248" width="256" height="48" rx="6"/>
+  <text class="lab0" x="428" y="277" text-anchor="middle">1 a 4</text>
+  <rect class="c3 cell" x="556" y="248" width="384" height="48" rx="6"/>
+  <text class="lab" x="748" y="277" text-anchor="middle">5 a 10</text>
+  <text class="h" x="28" y="338">Apto / No apto</text>
+  <text class="s" x="28" y="356">Desplegable</text>
+  <rect class="c0 cell" x="236" y="316" width="320" height="48" rx="6"/>
+  <text class="lab0" x="396" y="345" text-anchor="middle">No apto</text>
+  <rect class="c3 cell" x="556" y="316" width="384" height="48" rx="6"/>
+  <text class="lab" x="748" y="345" text-anchor="middle">Apto</text>
+  <text class="s" x="236" y="384">En Apto / No apto escribe el término: los números se rechazan.</text>
+  <line class="line" x1="28" y1="404" x2="932" y2="404"/>
+  <text class="s" x="28" y="432">Solo números enteros. Si una nota no vale para la pantalla (7,5 en Bachillerato, 0 en FP), avisa y no la escribe: no redondea por ti.</text>
+</svg>

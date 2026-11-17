@@ -14,6 +14,19 @@
     .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
     .foot { fill: #57606a; font-size: 12.5px; }
     .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card, .row, .pill { fill: #161b22; stroke: #30363d; }
+      .row { stroke: none; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .num { fill: #6e7681; } .numyou, .bad { fill: #e5534b; }
+      .h, .b, .td, .new { fill: #e6edf3; }
+      .s, .m, .th, .tdm, .foot { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .arrow { stroke: #6e7681; }
+      .ok { fill: #3fb950; } .warn { fill: #d29922; } .same { fill: #6e7681; }
+      line { stroke: #30363d; }
+    }
   </style>
   <rect class="bg" x="0.5" y="0.5" width="959" height="249" rx="12"/>
 

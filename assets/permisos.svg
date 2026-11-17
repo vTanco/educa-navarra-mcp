@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 320" width="960" height="320" role="img" aria-labelledby="t d">
+  <title id="t">Qué hace solo y qué necesita tu permiso</title>
+  <desc id="d">Lo hace solo: entrar en Educa, leer grupos, alumnos, notas y tu Excel, abrir pantallas y hacer capturas. Con tu confirmación: escribir notas, aceptar nombres aproximados, guardar, rellenar y guardar partes. Nunca: cerrar o firmar evaluaciones, bloquear, borrar o publicar, escribir en grupos sin notas, visitar otras webs, redondear o inventar hechos.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; }
+    .you { fill: #fff5f5; stroke: #B5121B; }
+    .box { fill: none; stroke: #8c959f; stroke-dasharray: 5 4; }
+    .num { fill: #57606a; } .numyou { fill: #B5121B; }
+    .n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .h { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .m { fill: #57606a; font-size: 13px; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .line { stroke: #d0d7de; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .warnline { stroke: #B5121B; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .ok { fill: #1a7f37; } .bad { fill: #B5121B; } .grey { fill: #8c959f; }
+    .accent { fill: #B5121B; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .box { stroke: #6e7681; }
+      .num { fill: #6e7681; } .numyou, .accent { fill: #e5534b; }
+      .h, .t, .td, .b { fill: #e6edf3; }
+      .s, .m, .th { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .line { stroke: #30363d; }
+      .arrow { stroke: #6e7681; }
+      .warnline { stroke: #e5534b; }
+      .ok { fill: #3fb950; } .bad { fill: #e5534b; } .grey { fill: #6e7681; }
+    }
+
+    .never { fill: #f6f8fa; stroke: #d0d7de; }
+    .x { stroke: #57606a; stroke-width: 1.8; }
+    @media (prefers-color-scheme: dark) { .never { fill: #161b22; stroke: #30363d; } .x { stroke: #8d96a0; } }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="319" rx="12"/>
+  <rect class="card" x="24" y="24" width="300" height="272" rx="10"/>
+  <text class="th" x="44" y="54">LO HACE SOLO</text>
+  <text class="h" x="44" y="80">Leer y preparar</text>
+  <line class="line" x1="44" y1="96" x2="304" y2="96"/>
+  <circle class="grey" cx="50" cy="122" r="4"/>
+  <text class="td" x="64" y="126">Entrar en Educa</text>
+  <circle class="grey" cx="50" cy="150" r="4"/>
+  <text class="td" x="64" y="154">Leer grupos, alumnos y notas</text>
+  <circle class="grey" cx="50" cy="178" r="4"/>
+  <text class="td" x="64" y="182">Abrir la pantalla de Calificaciones</text>
+  <circle class="grey" cx="50" cy="206" r="4"/>
+  <text class="td" x="64" y="210">Leer tu Excel</text>
+  <circle class="grey" cx="50" cy="234" r="4"/>
+  <text class="td" x="64" y="238">Hacer capturas de pantalla</text>
+  <circle class="grey" cx="50" cy="262" r="4"/>
+  <text class="td" x="64" y="266">Abrir el formulario de un parte</text>
+  <rect class="you" x="330" y="24" width="300" height="272" rx="10"/>
+  <text class="tag" x="350" y="54">CON TU CONFIRMACIÓN</text>
+  <text class="h" x="350" y="80">Escribir y guardar</text>
+  <line class="line" x1="350" y1="96" x2="610" y2="96"/>
+  <circle class="accent" cx="356" cy="122" r="4"/>
+  <text class="td" x="370" y="126">Escribir notas en pantalla</text>
+  <circle class="accent" cx="356" cy="150" r="4"/>
+  <text class="td" x="370" y="154">Escribir un nombre aproximado</text>
+  <circle class="accent" cx="356" cy="178" r="4"/>
+  <text class="td" x="370" y="182">Pulsar Aceptar para guardar</text>
+  <circle class="accent" cx="356" cy="206" r="4"/>
+  <text class="td" x="370" y="210">Rellenar un parte en pantalla</text>
+  <circle class="accent" cx="356" cy="234" r="4"/>
+  <text class="td" x="370" y="238">Pulsar Guardar o Guardar y enviar</text>
+  <rect class="never" x="636" y="24" width="300" height="272" rx="10"/>
+  <text class="th" x="656" y="54">NO LO HACE NUNCA</text>
+  <text class="h" x="656" y="80">Aunque se lo pidas</text>
+  <line class="line" x1="656" y1="96" x2="916" y2="96"/>
+  <path class="x" d="M658 118 l8 8 m0 -8 l-8 8"/>
+  <text class="td" x="676" y="126">Cerrar o firmar una evaluación</text>
+  <path class="x" d="M658 146 l8 8 m0 -8 l-8 8"/>
+  <text class="td" x="676" y="154">Bloquear, borrar o publicar</text>
+  <path class="x" d="M658 174 l8 8 m0 -8 l-8 8"/>
+  <text class="td" x="676" y="182">Escribir en tus grupos sin notas</text>
+  <path class="x" d="M658 202 l8 8 m0 -8 l-8 8"/>
+  <text class="td" x="676" y="210">Visitar webs que no sean de Educa</text>
+  <path class="x" d="M658 230 l8 8 m0 -8 l-8 8"/>
+  <text class="td" x="676" y="238">Redondear una nota</text>
+  <path class="x" d="M658 258 l8 8 m0 -8 l-8 8"/>
+  <text class="td" x="676" y="266">Inventar hechos en un parte</text>
+</svg>
