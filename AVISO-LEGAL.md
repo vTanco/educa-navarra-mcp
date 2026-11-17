@@ -11,10 +11,10 @@ La herramienta no utiliza ninguna interfaz privada ni salta ninguna medida de se
 ## 2. Tu responsabilidad como docente
 
 - Las calificaciones y los partes de convivencia son actos de los que **tú eres responsable**. El relato de un parte que redacta la IA es una propuesta: revísalo y corrígelo antes de guardarlo.
-- Las calificaciones son un acto administrativo del que **tú eres responsable**. Revisa siempre la vista previa y la pantalla de Educa antes de confirmar el guardado.
+- Revisa siempre la vista previa y la pantalla de Educa antes de confirmar el guardado.
 - La herramienta solo guarda cuando lo confirmas expresamente, y nunca cierra, firma, bloquea ni publica una evaluación: esos pasos los haces tú.
 - Usa solo tu propia cuenta. No compartas tus credenciales ni las de otra persona.
-- Respeta las instrucciones de tu centro y del Departamento sobre el uso de herramientas digitales y de inteligencia artificial.
+- Usa la herramienta bajo tu responsabilidad y conforme a las normas de tu centro, a las instrucciones del Departamento sobre herramientas digitales e inteligencia artificial y a las indicaciones de la persona delegada de protección de datos (DPD) del Departamento de Educación.
 
 ## 3. Datos personales (RGPD y LOPDGDD)
 
@@ -25,7 +25,7 @@ Las notas y los nombres del alumnado son datos personales de menores en muchos c
 | Usuario y contraseña de Educa | En tu ordenador (Claude Desktop los guarda cifrados; en las otras opciones, en el fichero o variables que tú configures) | Solo hacia el formulario de acceso de Educa |
 | Sesión del navegador | Carpeta `.educa-mcp` de tu usuario | No |
 | Tu Excel o CSV | Donde tú lo guardes | El conector lo lee en local; **lo que Claude muestre en el chat sí pasa por la IA** |
-| Nombres y notas de Educa (vista previa, lecturas, capturas) | Se envían como respuesta de las herramientas | **Sí: forman parte de la conversación con el proveedor de IA que uses** |
+| Nombres, notas y observaciones de Educa (vista previa, lecturas, capturas) | Se envían como respuesta de las herramientas | **Sí: forman parte de la conversación con el proveedor de IA que uses** |
 | Lo que cuentas para un parte de convivencia y el relato redactado | En la conversación y, al guardarlo, en Educa | **Sí: forma parte de la conversación con el proveedor de IA que uses** |
 
 El proyecto **no tiene servidores propios** y no recoge, almacena ni recibe ningún dato: ni credenciales, ni datos del alumnado, ni estadísticas de uso.
@@ -34,6 +34,8 @@ Lo que sí ocurre es que la aplicación de IA que uses (por ejemplo Claude, de A
 
 Para reducir los datos que se comparten:
 
+- En Claude, desactiva en **Ajustes → Privacidad** el uso de tus conversaciones para mejorar los modelos (*Ayudar a mejorar Claude*).
+- Recuerda que la conversación, con los datos que contenga, puede quedar en tu historial: borra las que ya no necesites.
 - Usa el fichero con solo las columnas necesarias (alumno y nota).
 - En los partes, cuenta solo los hechos necesarios: sin nombres de otros alumnos ni datos de salud o familiares que no hagan falta.
 - No pidas capturas de pantalla ni volcados de la página si no hace falta.
