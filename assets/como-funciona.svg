@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 372" width="960" height="372" role="img" aria-labelledby="t d">
+  <title id="t">Cómo funciona por dentro</title>
+  <desc id="d">El conector se ejecuta en tu ordenador: recibe órdenes de Claude, lee tu Excel y maneja una ventana de Chrome o Edge que solo visita Educa. Lo que pasa por la conversación llega a Claude, en la nube de Anthropic; al autor del conector no le llega nada.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; }
+    .you { fill: #fff5f5; stroke: #B5121B; }
+    .box { fill: none; stroke: #8c959f; stroke-dasharray: 5 4; }
+    .num { fill: #57606a; } .numyou { fill: #B5121B; }
+    .n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .h { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .m { fill: #57606a; font-size: 13px; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .line { stroke: #d0d7de; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .warnline { stroke: #B5121B; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .ok { fill: #1a7f37; } .bad { fill: #B5121B; } .grey { fill: #8c959f; }
+    .accent { fill: #B5121B; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .box { stroke: #6e7681; }
+      .num { fill: #6e7681; } .numyou, .accent { fill: #e5534b; }
+      .h, .t, .td, .b { fill: #e6edf3; }
+      .s, .m, .th { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .line { stroke: #30363d; }
+      .arrow { stroke: #6e7681; }
+      .warnline { stroke: #e5534b; }
+      .ok { fill: #3fb950; } .bad { fill: #e5534b; } .grey { fill: #6e7681; }
+    }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="371" rx="12"/>
+  <rect class="box" x="24" y="40" width="628" height="188" rx="12"/>
+  <text class="th" x="44" y="64">TU ORDENADOR</text>
+  <rect class="card" x="44" y="80" width="184" height="120" rx="10"/>
+  <text class="h" x="58" y="134">Tú y Claude</text>
+  <text class="s" x="58" y="156">Escribes en el chat y</text>
+  <text class="s" x="58" y="174">decides qué se guarda</text>
+  <rect class="card" x="256" y="80" width="184" height="120" rx="10"/>
+  <text class="tag" x="270" y="104">ESTE PROYECTO</text>
+  <text class="h" x="270" y="134">Conector</text>
+  <text class="s" x="270" y="156">Lee tu Excel y maneja</text>
+  <text class="s" x="270" y="174">el navegador por ti</text>
+  <rect class="card" x="468" y="80" width="164" height="120" rx="10"/>
+  <text class="h" x="482" y="134">Navegador</text>
+  <text class="s" x="482" y="156">Chrome o Edge, en una</text>
+  <text class="s" x="482" y="174">ventana que ves</text>
+  <path class="arrow" d="M230 140 H254 m-6 -5 l6 5 l-6 5 M236 135 l-6 5 l6 5"/>
+  <path class="arrow" d="M442 140 H466 m-6 -5 l6 5 l-6 5 M448 135 l-6 5 l6 5"/>
+  <rect class="card" x="712" y="80" width="224" height="120" rx="10"/>
+  <text class="h" x="726" y="134">Educa</text>
+  <text class="s" x="726" y="156">educa.navarra.es, con tu</text>
+  <text class="s" x="726" y="174">sesión de profesor</text>
+  <path class="arrow" d="M634 140 H710 m-6 -5 l6 5 l-6 5 M640 135 l-6 5 l6 5"/>
+  <text class="s" x="672" y="126" text-anchor="middle">solo Educa</text>
+  <rect class="you" x="44" y="268" width="184" height="76" rx="10"/>
+  <text class="h" x="58" y="298">Claude</text>
+  <text class="s" x="58" y="320">Servicio de Anthropic,</text>
+  <text class="s" x="58" y="336">en la nube</text>
+  <path class="warnline" d="M136 202 V266"/>
+  <text class="b" x="256" y="290">Lo que pasa por la conversación sale de tu ordenador.</text>
+  <text class="s" x="256" y="312">Nombres, notas, observaciones y relatos que el conector lee o escribe. Desactiva el</text>
+  <text class="s" x="256" y="330">entrenamiento en Ajustes → Privacidad. Al autor del conector no le llega nada.</text>
+</svg>

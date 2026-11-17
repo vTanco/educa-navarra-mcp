@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 616" width="960" height="616" role="img" aria-labelledby="t d">
+  <title id="t">Qué se ha probado</title>
+  <desc id="d">Probado en el Educa real, sin guardar: leer notas, abrir grupos, detectar la escala y escribir en pantalla en ESO y Bachillerato; leer observaciones en Bachillerato; abrir, leer y rellenar partes en ESO. El resto, incluido pulsar Aceptar o Guardar y todo FP, solo en el simulador.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; }
+    .you { fill: #fff5f5; stroke: #B5121B; }
+    .box { fill: none; stroke: #8c959f; stroke-dasharray: 5 4; }
+    .num { fill: #57606a; } .numyou { fill: #B5121B; }
+    .n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .h { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .m { fill: #57606a; font-size: 13px; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .line { stroke: #d0d7de; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .warnline { stroke: #B5121B; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .ok { fill: #1a7f37; } .bad { fill: #B5121B; } .grey { fill: #8c959f; }
+    .accent { fill: #B5121B; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .box { stroke: #6e7681; }
+      .num { fill: #6e7681; } .numyou, .accent { fill: #e5534b; }
+      .h, .t, .td, .b { fill: #e6edf3; }
+      .s, .m, .th { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .line { stroke: #30363d; }
+      .arrow { stroke: #6e7681; }
+      .warnline { stroke: #e5534b; }
+      .ok { fill: #3fb950; } .bad { fill: #e5534b; } .grey { fill: #6e7681; }
+    }
+
+    .real { fill: #1a7f37; } .realt { fill: #ffffff; font-size: 12px; font-weight: 600; }
+    .sim { fill: none; stroke: #8c959f; stroke-dasharray: 4 3; } .simt { fill: #57606a; font-size: 12px; }
+    @media (prefers-color-scheme: dark) { .real { fill: #238636; } .sim { stroke: #6e7681; } .simt { fill: #8d96a0; } }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="615" rx="12"/>
+  <text class="t" x="28" y="42">Qué se ha probado en el Educa real</text>
+  <rect class="real" x="28" y="60" width="18" height="14" rx="3"/><text class="m" x="54" y="72">Probado en el Educa real de un instituto, sin guardar</text>
+  <rect class="sim" x="440" y="60.5" width="18" height="13" rx="3"/><text class="m" x="466" y="72">Solo en el Educa simulado de las pruebas automáticas</text>
+  <text class="th" x="28" y="108">NOTAS Y OBSERVACIONES</text>
+  <text class="th" x="498" y="108" text-anchor="middle">ESO</text>
+  <text class="th" x="668" y="108" text-anchor="middle">BACHILLERATO</text>
+  <text class="th" x="838" y="108" text-anchor="middle">FP</text>
+  <line class="line" x1="28" y1="120" x2="932" y2="120"/>
+  <text class="td" x="28" y="143">Entrar y leer la tabla de notas</text>
+  <rect class="real" x="420" y="125" width="156" height="26" rx="5"/><text class="realt" x="498" y="142" text-anchor="middle">Educa real</text>
+  <rect class="real" x="590" y="125" width="156" height="26" rx="5"/><text class="realt" x="668" y="142" text-anchor="middle">Educa real</text>
+  <rect class="sim" x="760.5" y="125.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="142" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="156" x2="932" y2="156"/>
+  <text class="td" x="28" y="179">Actualizar grupos y abrir uno por nombre</text>
+  <rect class="real" x="420" y="161" width="156" height="26" rx="5"/><text class="realt" x="498" y="178" text-anchor="middle">Educa real</text>
+  <rect class="real" x="590" y="161" width="156" height="26" rx="5"/><text class="realt" x="668" y="178" text-anchor="middle">Educa real</text>
+  <rect class="sim" x="760.5" y="161.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="178" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="192" x2="932" y2="192"/>
+  <text class="td" x="28" y="215">Detectar la escala</text>
+  <rect class="real" x="420" y="197" width="156" height="26" rx="5"/><text class="realt" x="498" y="214" text-anchor="middle">Educa real</text>
+  <rect class="real" x="590" y="197" width="156" height="26" rx="5"/><text class="realt" x="668" y="214" text-anchor="middle">Educa real</text>
+  <rect class="sim" x="760.5" y="197.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="214" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="228" x2="932" y2="228"/>
+  <text class="td" x="28" y="251">Escribir notas en pantalla, sin guardar</text>
+  <rect class="real" x="420" y="233" width="156" height="26" rx="5"/><text class="realt" x="498" y="250" text-anchor="middle">Educa real</text>
+  <rect class="real" x="590" y="233" width="156" height="26" rx="5"/><text class="realt" x="668" y="250" text-anchor="middle">Educa real</text>
+  <rect class="sim" x="760.5" y="233.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="250" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="264" x2="932" y2="264"/>
+  <text class="td" x="28" y="287">Pulsar Aceptar para guardar</text>
+  <rect class="sim" x="420.5" y="269.5" width="155" height="25" rx="5"/><text class="simt" x="498" y="286" text-anchor="middle">Simulador</text>
+  <rect class="sim" x="590.5" y="269.5" width="155" height="25" rx="5"/><text class="simt" x="668" y="286" text-anchor="middle">Simulador</text>
+  <rect class="sim" x="760.5" y="269.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="286" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="300" x2="932" y2="300"/>
+  <text class="td" x="28" y="323">Leer el cuadro de observaciones</text>
+  <rect class="sim" x="420.5" y="305.5" width="155" height="25" rx="5"/><text class="simt" x="498" y="322" text-anchor="middle">Simulador</text>
+  <rect class="real" x="590" y="305" width="156" height="26" rx="5"/><text class="realt" x="668" y="322" text-anchor="middle">Educa real</text>
+  <rect class="sim" x="760.5" y="305.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="322" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="336" x2="932" y2="336"/>
+  <text class="td" x="28" y="359">Escribir observaciones</text>
+  <rect class="sim" x="420.5" y="341.5" width="155" height="25" rx="5"/><text class="simt" x="498" y="358" text-anchor="middle">Simulador</text>
+  <rect class="sim" x="590.5" y="341.5" width="155" height="25" rx="5"/><text class="simt" x="668" y="358" text-anchor="middle">Simulador</text>
+  <rect class="sim" x="760.5" y="341.5" width="155" height="25" rx="5"/><text class="simt" x="838" y="358" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="372" x2="932" y2="372"/>
+  <text class="th" x="28" y="406">PARTES DE CONVIVENCIA</text>
+  <text class="th" x="498" y="406" text-anchor="middle">ESO</text>
+  <line class="line" x1="28" y1="418" x2="932" y2="418"/>
+  <text class="td" x="28" y="441">Abrir Nuevo informe, elegir grupo y alumno</text>
+  <rect class="real" x="420" y="423" width="156" height="26" rx="5"/><text class="realt" x="498" y="440" text-anchor="middle">Educa real</text>
+  <line class="line" x1="28" y1="454" x2="932" y2="454"/>
+  <text class="td" x="28" y="477">Leer espacios, sesiones, conductas y medidas</text>
+  <rect class="real" x="420" y="459" width="156" height="26" rx="5"/><text class="realt" x="498" y="476" text-anchor="middle">Educa real</text>
+  <line class="line" x1="28" y1="490" x2="932" y2="490"/>
+  <text class="td" x="28" y="513">Rellenar el formulario, sin guardar</text>
+  <rect class="real" x="420" y="495" width="156" height="26" rx="5"/><text class="realt" x="498" y="512" text-anchor="middle">Educa real</text>
+  <line class="line" x1="28" y1="526" x2="932" y2="526"/>
+  <text class="td" x="28" y="549">Pulsar Guardar o Guardar y enviar</text>
+  <rect class="sim" x="420.5" y="531.5" width="155" height="25" rx="5"/><text class="simt" x="498" y="548" text-anchor="middle">Simulador</text>
+  <line class="line" x1="28" y1="562" x2="932" y2="562"/>
+  <text class="s" x="28" y="592">Todo el recorrido, guardado incluido, pasa pruebas automáticas en cada cambio para ESO, Bachillerato, FP y Apto / No apto.</text>
+</svg>

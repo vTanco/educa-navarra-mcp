@@ -10,12 +10,15 @@ También escribe las observaciones para las familias y redacta y registra partes
 [![npm](https://img.shields.io/npm/v/educa-navarra-mcp?color=B5121B&label=npm)](https://www.npmjs.com/package/educa-navarra-mcp)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-1E8E3E)](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE)
 [![Pruebas](https://github.com/vTanco/educa-navarra-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/vTanco/educa-navarra-mcp/actions/workflows/ci.yml)
+[![Descargas](https://img.shields.io/npm/dm/educa-navarra-mcp?color=57606a&label=descargas)](https://www.npmjs.com/package/educa-navarra-mcp)
+[![Claude Desktop](https://img.shields.io/badge/Claude%20Desktop-.mcpb-B5121B)](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)
 ![Mac · Windows · Linux](https://img.shields.io/badge/Mac%20·%20Windows%20·%20Linux-grey)
 
 **[Descargar para Claude Desktop](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)** ·
 [Instalación](#instalación) ·
 [Primeros pasos](#primeros-pasos) ·
 [Partes de convivencia](#partes-de-convivencia) ·
+[Cómo funciona](#cómo-funciona) ·
 [Preparar el Excel](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md) ·
 [Qué se ha probado](#qué-se-ha-probado) ·
 [Protección de datos](#protección-de-datos) ·
@@ -116,6 +119,24 @@ Escríbele a Claude con tus palabras. La primera vez:
 
 El cierre y la firma de la evaluación los sigues haciendo tú a mano, como siempre.
 
+Así queda la conversación, de principio a fin:
+
+```mermaid
+sequenceDiagram
+    actor T as Tú
+    participant C as Claude
+    participant E as Educa
+    T->>C: Mete las notas de la 1ª evaluación de BTO N 1ºA, TIC
+    C->>E: Abre Calificaciones y lee la tabla
+    C-->>T: Vista previa con nota actual, nota nueva y avisos
+    T->>C: Vale, escríbelas
+    C->>E: Rellena la pantalla sin guardar
+    Note over E: Aparecen Aceptar y Cancelar
+    T->>C: Guarda
+    C->>E: Pulsa Aceptar
+    C-->>T: Vuelve a leer cada nota y te confirma el resultado
+```
+
 ### Qué puedes pedirle
 
 | Quieres… | Dile… |
@@ -146,6 +167,10 @@ Lo mismo con la asignatura (*"Tecnología"*) y la evaluación (*"2"*, *"2a"*, *"
 
 ## Partes de convivencia
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/partes.svg" width="100%" alt="Cinco pasos: se lo cuentas, redacta el relato, propone el tipo de conducta, rellena el parte sin guardar y pulsa Guardar solo si lo decides.">
+</p>
+
 Cuéntale a Claude, con tus palabras, a quién, de qué grupo, qué ha pasado, cuándo y dónde. Él:
 
 1. **Redacta el relato** de *Observaciones de lo sucedido* con tono formal y objetivo: hechos en orden, en tercera persona, sin juicios ni nombres de otros alumnos. No inventa nada; si falta un dato, te lo pregunta.
@@ -153,6 +178,10 @@ Cuéntale a Claude, con tus palabras, a quién, de qué grupo, qué ha pasado, c
 3. **Te enseña el parte completo**: alumno, fecha, espacio y sesión, conducta, contacto con la familia, propuesta de medida y el relato entero. No ha escrito nada todavía.
 4. **"Vale, rellénalo."** Abre *Gestión académica → Convivencia → Nuevo informe* y rellena el formulario en pantalla, sin guardar. La sesión la elige sola si ese día solo das una clase a ese alumno; si no, te pregunta la hora.
 5. **"Guárdalo."** Pulsa *Guardar* y el informe queda en Educa en borrador, para que lo revises y lo envíes tú. Si le dices *"guárdalo y envíalo"*, pulsa *Guardar y enviar* y te cuenta qué muestra Educa a continuación, sin pulsar nada más.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/parte-vista-previa.svg" width="100%" alt="Ejemplo con datos inventados de la vista previa de un parte: alumno, fecha, espacio, sesión, tipo de conducta con su artículo, contacto con la familia, medida y el relato redactado.">
+</p>
 
 | Campo de Educa | De dónde sale |
 |---|---|
@@ -176,11 +205,9 @@ Vale casi cualquier Excel (`.xlsx`) o CSV con una fila por alumno y una columna 
 | **Nombre** | `EVALUACIÓN_GRUPO_MATERIA` | `1EV_BTO-1A_TIC.xlsx` |
 | **Contenido** | Cabeceras en la primera fila, una fila por alumno | *Apellidos · Nombre · Nota* |
 
-| Apellidos | Nombre | Nota |
-|---|---|---|
-| García López | Ana | 7 |
-| Pérez Martínez | Iñigo | 9 |
-| Etxeberria Goñi | Maite | |
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/excel-ejemplo.svg" width="100%" alt="Hoja de ejemplo 1EV_BTO-1A_TIC.xlsx con columnas Apellidos, Nombre, Nota y Observaciones, y cuatro notas: nombre del fichero, cabeceras en la primera fila, nota en blanco y columna de observaciones opcional. Datos inventados.">
+</p>
 
 - Si tus columnas se llaman de otra forma, díselo: *"la nota está en la columna Media T1"*.
 - Los alumnos con la nota en blanco se saltan.
@@ -199,9 +226,24 @@ Si el fichero trae observaciones, la vista previa añade una columna con el text
 
 Los nombres que solo coinciden en parte se marcan como *aproximados* y no se escriben salvo que lo confirmes. También avisa de alumnos del fichero que no están en Educa y de alumnos de Educa que no tienen nota en el fichero.
 
+```mermaid
+flowchart TD
+    A[Alumno de tu fichero] --> B{¿Está en la lista de Educa?}
+    B -->|Mismo nombre, aunque cambien<br>tildes, mayúsculas u orden| C[Se escribe]
+    B -->|Coincide solo en parte| D[Aproximado:<br>espera tu confirmación]
+    B -->|No aparece| E[Aviso:<br>no se escribe]
+```
+
 ## Cualquier etapa
 
 El conector no supone cómo se califica: lee la pantalla de Educa abierta y se adapta. Vale igual si este curso das ESO y el siguiente un ciclo formativo.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/escalas.svg" width="100%" alt="Escalas por etapa. ESO: 0 a 4 IN, 5 SU, 6 BI, 7 y 8 NT, 9 y 10 SB. Bachillerato: entero de 0 a 10. FP: entero de 1 a 10. Apto o No apto: solo el término. No redondea.">
+</p>
+
+<details>
+<summary>Detalle por tipo de pantalla</summary>
 
 | Lo que ofrece Educa | Qué acepta de tu fichero |
 |---|---|
@@ -211,9 +253,18 @@ El conector no supone cómo se califica: lee la pantalla de Educa abierta y se a
 | Desplegable Apto / No apto | El término; rechaza números |
 | Otros valores (FPEX, EX, NP…) | Solo si la pantalla los ofrece |
 
+</details>
+
 La vista previa dice siempre qué escala ha detectado. Normativa de referencia (LOMLOE y órdenes forales de Navarra) en [normativa-evaluacion.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/normativa-evaluacion.md).
 
 ## Qué hace solo y qué necesita tu permiso
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/permisos.svg" width="100%" alt="Lo hace solo: entrar en Educa, leer grupos, alumnos, notas y tu Excel, abrir pantallas y hacer capturas. Con tu confirmación: escribir notas, aceptar nombres aproximados, guardar y rellenar o guardar partes. Nunca: cerrar o firmar evaluaciones, bloquear, borrar o publicar, escribir en grupos sin notas, visitar otras webs, redondear o inventar hechos.">
+</p>
+
+<details>
+<summary>La misma información en una tabla</summary>
 
 | Lo hace solo | Necesita que lo confirmes | No lo hace nunca |
 |---|---|---|
@@ -224,11 +275,20 @@ La vista previa dice siempre qué escala ha detectado. Normativa de referencia (
 | Hacer capturas de pantalla | Rellenar un parte en pantalla (tras la vista previa) | Redondear una nota |
 | Abrir el formulario de un parte y leer sus listas | Pulsar *Guardar* o *Guardar y enviar* en un parte | Inventar hechos en un parte |
 
+</details>
+
 Antes de escribir comprueba que la tabla no ha cambiado (mismo grupo y mismos alumnos) y, después, vuelve a leer cada campo. No toca campos bloqueados, como los de una evaluación ya cerrada.
 
 ## Qué se ha probado
 
 Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachillerato, FP y Apto / No apto), con todo el recorrido: entrar, abrir el grupo, vista previa, escribir y guardar. Además, se ha probado en el **Educa real** de un instituto de Navarra con una cuenta de profesor, sin guardar nada:
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/probado.svg" width="100%" alt="Matriz de pruebas. En el Educa real, sin guardar: leer notas, abrir grupos, detectar la escala y escribir en pantalla en ESO y Bachillerato, leer observaciones en Bachillerato y abrir, leer y rellenar partes en ESO. El resto, incluido guardar y todo FP, solo en el simulador.">
+</p>
+
+<details>
+<summary>La misma información en tablas</summary>
 
 | | ESO | Bachillerato | FP |
 |---|---|---|---|
@@ -247,7 +307,17 @@ Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachill
 | Rellenar el formulario en pantalla, sin guardar | Probado en Educa real (ESO) |
 | Pulsar *Guardar* o *Guardar y enviar* | Solo simulador |
 
+</details>
+
 En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Aceptar* y *Cancelar* y no guarda hasta pulsar uno de los dos; el guardado definitivo se ha dejado para cuando un docente lo haga con sus propias notas. ¿Lo has usado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
+
+## Cómo funciona
+
+Educa no tiene una conexión oficial para aplicaciones, así que el conector hace lo mismo que harías tú: abre una ventana del navegador en tu ordenador, entra en Educa y rellena la pantalla. Claude le dice qué hacer y tú lo ves todo.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/como-funciona.svg" width="100%" alt="El conector se ejecuta en tu ordenador, lee tu Excel y maneja una ventana de Chrome o Edge que solo visita Educa. Lo que pasa por la conversación llega a Claude, en la nube de Anthropic. Al autor del conector no le llega nada.">
+</p>
 
 ## Protección de datos
 

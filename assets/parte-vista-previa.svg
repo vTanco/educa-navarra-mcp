@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 446" width="960" height="446" role="img" aria-labelledby="t d">
+  <title id="t">Ejemplo de vista previa de un parte</title>
+  <desc id="d">Ejemplo con datos inventados del parte que enseña Claude antes de escribir nada: alumno y grupo, fecha, espacio, sesión, tipo de conducta con su artículo, contacto con la familia, propuesta de medida y el relato redactado en tono formal.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; }
+    .you { fill: #fff5f5; stroke: #B5121B; }
+    .box { fill: none; stroke: #8c959f; stroke-dasharray: 5 4; }
+    .num { fill: #57606a; } .numyou { fill: #B5121B; }
+    .n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .h { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .m { fill: #57606a; font-size: 13px; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .line { stroke: #d0d7de; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .warnline { stroke: #B5121B; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .ok { fill: #1a7f37; } .bad { fill: #B5121B; } .grey { fill: #8c959f; }
+    .accent { fill: #B5121B; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .box { stroke: #6e7681; }
+      .num { fill: #6e7681; } .numyou, .accent { fill: #e5534b; }
+      .h, .t, .td, .b { fill: #e6edf3; }
+      .s, .m, .th { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .line { stroke: #30363d; }
+      .arrow { stroke: #6e7681; }
+      .warnline { stroke: #e5534b; }
+      .ok { fill: #3fb950; } .bad { fill: #e5534b; } .grey { fill: #6e7681; }
+    }
+
+    .pill { fill: #f6f8fa; stroke: #d0d7de; } .k { fill: #57606a; font-size: 13px; }
+    .relato { fill: #f6f8fa; stroke: #d0d7de; }
+    @media (prefers-color-scheme: dark) { .pill, .relato { fill: #161b22; stroke: #30363d; } .k { fill: #8d96a0; } }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="445" rx="12"/>
+  <text class="t" x="28" y="40">Vista previa del parte</text>
+  <rect class="pill" x="232" y="23" width="252" height="24" rx="12"/>
+  <text class="m" x="358" y="40" text-anchor="middle">ESO 3º D · Iker Muro Sola</text>
+  <text class="k" x="28" y="76">Fecha suceso</text>
+  <text class="td" x="230" y="76">12/11/2026</text>
+  <line class="line" x1="28" y1="88" x2="932" y2="88"/>
+  <text class="k" x="28" y="108">Espacio</text>
+  <text class="td" x="230" y="108">Sesión presencial</text>
+  <line class="line" x1="28" y1="120" x2="932" y2="120"/>
+  <text class="k" x="28" y="140">Sesión</text>
+  <text class="td" x="230" y="140">11:20 – 12:15 · Tecnología</text>
+  <line class="line" x1="28" y1="152" x2="932" y2="152"/>
+  <text class="k" x="28" y="172">Tipo de conducta</text>
+  <text class="td" x="230" y="172">Contraria a la convivencia · FALTA DE RESPETO (art. 14 g)</text>
+  <line class="line" x1="28" y1="184" x2="932" y2="184"/>
+  <text class="k" x="28" y="204">Contacto con la familia</text>
+  <text class="td" x="230" y="204">Todavía no</text>
+  <line class="line" x1="28" y1="216" x2="932" y2="216"/>
+  <text class="k" x="28" y="236">Propuesta de medida</text>
+  <text class="td" x="230" y="236">Ninguna</text>
+  <line class="line" x1="28" y1="248" x2="932" y2="248"/>
+  <text class="k" x="28" y="268">Observaciones de lo sucedido</text>
+  <rect class="relato" x="28" y="282" width="904" height="102" rx="8"/>
+  <text class="td" x="44" y="308">El día 12 de noviembre de 2026, durante la sesión de Tecnología de 11:20 a 12:15, el alumno tenía</text>
+  <text class="td" x="44" y="328">el teléfono móvil sobre la mesa. El profesor le pidió en dos ocasiones que lo guardara, conforme a</text>
+  <text class="td" x="44" y="348">las normas del centro, y el alumno se negó. Al insistir, el alumno respondió en tono elevado y con</text>
+  <text class="td" x="44" y="368">expresiones despectivas hacia el profesor delante del grupo. La clase se interrumpió unos minutos.</text>
+  <line class="line" x1="28" y1="402" x2="932" y2="402"/>
+  <text class="m" x="28" y="426">Nada se ha escrito en Educa todavía. Dile "vale, rellénalo" o corrige lo que quieras. Datos inventados.</text>
+</svg>

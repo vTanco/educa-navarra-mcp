@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 250" width="960" height="250" role="img" aria-labelledby="t d">
+  <title id="t">Cómo pone un parte</title>
+  <desc id="d">Cinco pasos: se lo cuentas, redacta el relato, propone el tipo de conducta, rellena el parte en Educa sin guardar y pulsa Guardar solo si lo decides. Queda en borrador salvo que pidas enviarlo.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial, sans-serif; }
+    .bg { fill: #ffffff; stroke: #d0d7de; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; }
+    .you { fill: #fff5f5; stroke: #B5121B; }
+    .box { fill: none; stroke: #8c959f; stroke-dasharray: 5 4; }
+    .num { fill: #57606a; } .numyou { fill: #B5121B; }
+    .n { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .h { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .t { fill: #1f2328; font-size: 17px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .m { fill: #57606a; font-size: 13px; }
+    .td { fill: #1f2328; font-size: 13px; }
+    .b { fill: #1f2328; font-size: 13px; font-weight: 600; }
+    .th { fill: #57606a; font-size: 11.5px; font-weight: 600; letter-spacing: .04em; }
+    .tag { fill: #B5121B; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .line { stroke: #d0d7de; }
+    .arrow { stroke: #8c959f; stroke-width: 1.6; fill: none; }
+    .warnline { stroke: #B5121B; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .ok { fill: #1a7f37; } .bad { fill: #B5121B; } .grey { fill: #8c959f; }
+    .accent { fill: #B5121B; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; stroke: #30363d; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .you { fill: #2a1416; stroke: #e5534b; }
+      .box { stroke: #6e7681; }
+      .num { fill: #6e7681; } .numyou, .accent { fill: #e5534b; }
+      .h, .t, .td, .b { fill: #e6edf3; }
+      .s, .m, .th { fill: #8d96a0; }
+      .tag { fill: #ff7b72; }
+      .line { stroke: #30363d; }
+      .arrow { stroke: #6e7681; }
+      .warnline { stroke: #e5534b; }
+      .ok { fill: #3fb950; } .bad { fill: #e5534b; } .grey { fill: #6e7681; }
+    }
+  </style>
+  <rect class="bg" x="0.5" y="0.5" width="959" height="249" rx="12"/>
+  <rect class="you" x="24" y="40" width="160" height="128" rx="10"/>
+  <circle class="numyou" cx="48" cy="66" r="13"/><text class="n" x="48" y="71" text-anchor="middle">1</text>
+  <text class="tag" x="70" y="70">TÚ</text>
+  <text class="h" x="36" y="104">Se lo cuentas</text>
+  <text class="s" x="36" y="126">Quién, qué grupo, qué</text>
+  <text class="s" x="36" y="144">pasó, cuándo y dónde</text>
+  <path class="arrow" d="M188 104 h14 m-6 -5 l6 5 l-6 5"/>
+  <rect class="card" x="206" y="40" width="160" height="128" rx="10"/>
+  <circle class="num" cx="230" cy="66" r="13"/><text class="n" x="230" y="71" text-anchor="middle">2</text>
+  <text class="h" x="218" y="104">Redacta el relato</text>
+  <text class="s" x="218" y="126">Formal y objetivo. Si</text>
+  <text class="s" x="218" y="144">falta un dato, pregunta</text>
+  <path class="arrow" d="M370 104 h14 m-6 -5 l6 5 l-6 5"/>
+  <rect class="card" x="388" y="40" width="160" height="128" rx="10"/>
+  <circle class="num" cx="412" cy="66" r="13"/><text class="n" x="412" y="71" text-anchor="middle">3</text>
+  <text class="h" x="400" y="104">Propone conducta</text>
+  <text class="s" x="400" y="126">De la lista de Educa,</text>
+  <text class="s" x="400" y="144">con su artículo</text>
+  <path class="arrow" d="M552 104 h14 m-6 -5 l6 5 l-6 5"/>
+  <rect class="card" x="570" y="40" width="160" height="128" rx="10"/>
+  <circle class="num" cx="594" cy="66" r="13"/><text class="n" x="594" y="71" text-anchor="middle">4</text>
+  <text class="h" x="582" y="104">Rellena el parte</text>
+  <text class="s" x="582" y="126">En la pantalla de</text>
+  <text class="s" x="582" y="144">Educa, sin guardar</text>
+  <path class="arrow" d="M734 104 h14 m-6 -5 l6 5 l-6 5"/>
+  <rect class="you" x="752" y="40" width="184" height="128" rx="10"/>
+  <circle class="numyou" cx="776" cy="66" r="13"/><text class="n" x="776" y="71" text-anchor="middle">5</text>
+  <text class="tag" x="798" y="70">TÚ DECIDES</text>
+  <text class="h" x="764" y="104">Pulsa Guardar</text>
+  <text class="s" x="764" y="126">Queda en borrador. Lo</text>
+  <text class="s" x="764" y="144">envía solo si lo pides</text>
+  <line class="line" x1="24" y1="196" x2="936" y2="196"/>
+  <text class="s" x="24" y="224">Nunca inventa hechos ni nombra a otros alumnos. Conductas según el Decreto Foral 47/2010 (arts. 14 y 17).</text>
+</svg>
