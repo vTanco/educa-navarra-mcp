@@ -530,10 +530,12 @@ export class FieldGone extends Error {
   }
 }
 
-async function settle(page: Page, extraMs = 800): Promise<void> {
+export async function settle(page: Page, extraMs = 800): Promise<void> {
   await page.waitForLoadState("domcontentloaded").catch(() => undefined);
   await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
   await page.waitForTimeout(extraMs);
+  // Capa "cargando" de Educa-Gestión: tapa la página mientras carga datos
+  await page.locator(".cargandoApp").filter({ visible: true }).first().waitFor({ state: "hidden", timeout: 15_000 }).catch(() => undefined);
 }
 
 // ---------- Funciones que se ejecutan dentro de la página ----------
@@ -758,7 +760,7 @@ function markSelectsMatching(hint: string): string[] {
   return keys;
 }
 
-function collectMessages(): string[] {
+export function collectMessages(): string[] {
   const clean = (s: string | null) => (s ?? "").replace(/\s+/g, " ").trim();
   const nodes = [...document.querySelectorAll(".alert, .mensaje, .message, .error, .aviso, .info, .success, [role=alert], [role=status], .ui-messages, .feedback, .toast")];
   const out = nodes.map(n => clean(n.textContent)).filter(t => t && t.length < 400);

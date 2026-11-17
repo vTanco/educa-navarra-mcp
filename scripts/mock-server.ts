@@ -5,6 +5,7 @@
  *   npm run mock   -> http://127.0.0.1:4321  (usuario: profe / contraseña: 1234)
  */
 import { createServer, type IncomingMessage, type Server } from "node:http";
+import { convivenciaRoute } from "./mock-convivencia.js";
 
 const STUDENTS = [
   { id: "1001", name: "GARCÍA LÓPEZ, Ana" },
@@ -59,7 +60,7 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
       // Imita la entrada a Educa-Gestión: menú, diálogo de grupo / agrupamiento y lista de asignaturas
       const datos = { grupo: { "BTO N 1ºA": ["Tecnologías de la Información y la Comunicación"], "ESO 2º D": ["Tecnología y Digitalización ES2"] }, agrupamiento: { "ESO 1ºAB plu": ["Tecnología y Digitalización ES1", "Atención educativa"] } };
       return send(page("EducaGestion", `<div id="usuario-conectado">Profe Demo</div>
-        <nav><a href="#" onclick="show('m2')">CUADERNO DE AULA</a> <a href="#" id="m2" hidden onclick="show('m3')">CALIFICACIONES</a> <a href="#" id="m3" hidden onclick="show('dlg')">DE EVALUACIÓN: ASIGNATURA</a></nav>
+        <nav><a href="#" onclick="show('m2')">CUADERNO DE AULA</a> <a href="#" id="m2" hidden onclick="show('m3')">CALIFICACIONES</a> <a href="#" id="m3" hidden onclick="show('dlg')">DE EVALUACIÓN: ASIGNATURA</a> <a href="#" onclick="show('g2')">GESTIÓN ACADÉMICA</a> <a href="/convivencia" id="g2" hidden>CONVIVENCIA</a></nav>
         <div role="dialog" class="p-dialog" id="dlg" hidden>
           <label>Grupo: <p-select placeholder="Seleccione un grupo" data-kind="grupo" style="display:inline-block"><span role="combobox" class="p-placeholder">Seleccione un grupo</span></p-select></label>
           <label>Agrupamiento: <p-select placeholder="Seleccione un agrupamiento" data-kind="agrupamiento" style="display:inline-block"><span role="combobox" class="p-placeholder">Seleccione un agrupamiento</span></p-select></label>
@@ -199,6 +200,7 @@ export function startMock(port = 0): Promise<{ server: Server; url: string }> {
         <table><thead><tr><th>Nº</th><th>Alumno/a</th><th>Nota final</th><th>Observaciones</th></tr></thead><tbody>${rows}</tbody></table>
         <input type="submit" value="Guardar"> <button type="button" onclick="alert('cerrada')">Cerrar evaluación</button></form>`));
     }
+    if (url.pathname.startsWith("/convivencia") && (await convivenciaRoute(url, req, send))) return;
     send(page("No encontrado", "404"), 404);
   });
   return new Promise(resolve => server.listen(port, "127.0.0.1", () => {

@@ -102,6 +102,15 @@ const ConfigSchema = z.object({
     })
     .default({ path: "/Educa/es/", menu: ["CUADERNO DE AULA", "CALIFICACIONES", "DE EVALUACIÓN: ASIGNATURA"] }),
 
+  /** Cómo llegar en Educa-Gestión a los informes (partes) de convivencia. */
+  incidentScreen: z
+    .object({
+      path: z.string().default("/Educa/es/"),
+      /** Entradas de menú que se pulsan por orden hasta ver el botón "Nuevo informe". */
+      menu: z.array(z.string()).default(["GESTIÓN ACADÉMICA", "CONVIVENCIA"])
+    })
+    .default({ path: "/Educa/es/", menu: ["GESTIÓN ACADÉMICA", "CONVIVENCIA"] }),
+
   /**
    * Grupos o agrupamientos en los que este docente no pone notas (p. ej. docencia compartida).
    * El servidor se niega a escribir o guardar notas si la pantalla abierta es de uno de ellos.

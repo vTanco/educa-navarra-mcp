@@ -5,7 +5,7 @@
 # Educa Navarra · notas con IA
 
 **Pásale tu Excel de notas a Claude y él las mete en Educa por ti.**<br>
-Tú revisas la pantalla y decides cuándo se guardan.
+También redacta y registra partes de convivencia. Tú revisas la pantalla y decides cuándo se guarda.
 
 [![npm](https://img.shields.io/npm/v/educa-navarra-mcp?color=B5121B&label=npm)](https://www.npmjs.com/package/educa-navarra-mcp)
 [![Licencia MIT](https://img.shields.io/badge/licencia-MIT-1E8E3E)](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE)
@@ -15,6 +15,7 @@ Tú revisas la pantalla y decides cuándo se guardan.
 **[Descargar para Claude Desktop](https://github.com/vTanco/educa-navarra-mcp/releases/latest/download/educa-navarra-mcp.mcpb)** ·
 [Instalación](#instalación) ·
 [Primeros pasos](#primeros-pasos) ·
+[Partes de convivencia](#partes-de-convivencia) ·
 [Preparar el Excel](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/BUENAS-PRACTICAS.md) ·
 [Qué se ha probado](#qué-se-ha-probado) ·
 [Preguntas](#preguntas-frecuentes)
@@ -39,6 +40,7 @@ Tú revisas la pantalla y decides cuándo se guardan.
 | **Escribe sin guardar** | Rellena las notas en la ventana de Educa para que las revises. |
 | **Añade observaciones** | Si tu fichero tiene una columna *Observaciones*, escribe también el comentario para las familias de cada alumno. |
 | **Guarda solo si lo dices** | Pulsa *Aceptar* únicamente cuando lo confirmas en el chat. |
+| **Redacta partes** | Le cuentas lo que ha pasado y prepara el informe de convivencia con tono formal, lo clasifica según la normativa de Navarra y lo registra en Educa cuando das el visto bueno. |
 
 Sirve para **ESO** (IN, SU, BI, NT, SB), **Bachillerato** (nota sobre 10) y **FP de Grado Medio y Superior**: lee la escala de cada pantalla en vez de suponerla.
 
@@ -125,8 +127,9 @@ El cierre y la firma de la evaluación los sigues haciendo tú a mano, como siem
 | Aceptar un nombre dudoso | *"Sí, Maite Etxeberria es la misma."* |
 | Ver la pantalla | *"Haz una captura de la pantalla."* |
 | Aprender a preparar el Excel | *"¿Cómo preparo mi Excel de notas?"* |
+| Poner un parte | *"Ponle un parte a Iker Muro, de 3º D: hoy en Tecnología se ha negado a guardar el móvil y me ha contestado de malas maneras."* |
 
-En Claude Desktop tienes además tres atajos en el menú **+** del chat: **Meter notas en Educa**, **Revisar mis notas en Educa** y **Cómo preparo mi Excel de notas**.
+En Claude Desktop tienes además cuatro atajos en el menú **+** del chat: **Meter notas en Educa**, **Revisar mis notas en Educa**, **Cómo preparo mi Excel de notas** y **Poner un parte de convivencia**.
 
 ### Nombres de grupo a medias
 
@@ -139,6 +142,28 @@ No hace falta escribir el nombre exacto de Educa. Si lo que dices encaja con un 
 | ESO 1ºAB plu, ESO 1ºCD plu, ESO 1ºEF plu | *"ESO 1"* | Te pregunta cuál de los tres |
 
 Lo mismo con la asignatura (*"Tecnología"*) y la evaluación (*"2"*, *"2a"*, *"Final"*). Si el grupo solo tiene una asignatura, no hace falta decirla.
+
+## Partes de convivencia
+
+Cuéntale a Claude, con tus palabras, a quién, de qué grupo, qué ha pasado, cuándo y dónde. Él:
+
+1. **Redacta el relato** de *Observaciones de lo sucedido* con tono formal y objetivo: hechos en orden, en tercera persona, sin juicios ni nombres de otros alumnos. No inventa nada; si falta un dato, te lo pregunta.
+2. **Propone el tipo de conducta** entre los que ofrece Educa en tu centro, con su artículo del Decreto Foral 47/2010 (contraria o gravemente perjudicial para la convivencia). Si hay duda, decides tú.
+3. **Te enseña el parte completo**: alumno, fecha, espacio y sesión, conducta, contacto con la familia, propuesta de medida y el relato entero. No ha escrito nada todavía.
+4. **"Vale, rellénalo."** Abre *Gestión académica → Convivencia → Nuevo informe* y rellena el formulario en pantalla, sin guardar. La sesión la elige sola si ese día solo das una clase a ese alumno; si no, te pregunta la hora.
+5. **"Guárdalo."** Pulsa *Guardar* y el informe queda en Educa en borrador, para que lo revises y lo envíes tú. Si le dices *"guárdalo y envíalo"*, pulsa *Guardar y enviar* y te cuenta qué muestra Educa a continuación, sin pulsar nada más.
+
+| Campo de Educa | De dónde sale |
+|---|---|
+| Fecha suceso | Lo que digas (*hoy*, *ayer* o una fecha) |
+| Espacio | *Sesión presencial* por defecto; también recreo, pasillos, comedor… según la lista de Educa |
+| Sesión | La que das a ese alumno ese día, o la hora que indiques |
+| Observaciones de lo sucedido | El relato que redacta Claude y apruebas tú (máximo 4000 caracteres) |
+| Contacto con la familia | Solo si dices que ya has hablado con la familia |
+| Tipo de conducta | Lista de Educa; Claude propone y tú confirmas |
+| Propuesta de medida | Opcional, de la lista de Educa |
+
+Correspondencia completa entre los rótulos de Educa y los artículos del decreto en [normativa-convivencia.md](https://github.com/vTanco/educa-navarra-mcp/blob/main/docs/normativa-convivencia.md).
 
 ## Tu fichero de notas
 
@@ -195,7 +220,8 @@ La vista previa dice siempre qué escala ha detectado. Normativa de referencia (
 | Leer grupos, alumnos y notas | Escribir un nombre aproximado | Bloquear, borrar o publicar |
 | Abrir la pantalla de Calificaciones | Pulsar *Aceptar* para guardar | Escribir en tus grupos sin notas |
 | Leer tu Excel | | Visitar webs que no sean de Educa |
-| Hacer capturas de pantalla | | Redondear una nota |
+| Hacer capturas de pantalla | Rellenar un parte en pantalla (tras la vista previa) | Redondear una nota |
+| Abrir el formulario de un parte y leer sus listas | Pulsar *Guardar* o *Guardar y enviar* en un parte | Inventar hechos en un parte |
 
 Antes de escribir comprueba que la tabla no ha cambiado (mismo grupo y mismos alumnos) y, después, vuelve a leer cada campo. No toca campos bloqueados, como los de una evaluación ya cerrada.
 
@@ -213,6 +239,13 @@ Cada cambio pasa pruebas automáticas contra un **Educa simulado** (ESO, Bachill
 | Leer el cuadro de observaciones | Solo simulador | Probado en Educa real | Solo simulador |
 | Escribir observaciones | Solo simulador | Solo simulador | Solo simulador |
 
+| Partes de convivencia | |
+|---|---|
+| Abrir *Nuevo informe*, elegir grupo y alumno | Probado en Educa real |
+| Leer espacios, sesiones del alumno, conductas y medidas | Probado en Educa real |
+| Rellenar el formulario en pantalla, sin guardar | Probado en Educa real (ESO) |
+| Pulsar *Guardar* o *Guardar y enviar* | Solo simulador |
+
 En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Aceptar* y *Cancelar* y no guarda hasta pulsar uno de los dos; el guardado definitivo se ha dejado para cuando un docente lo haga con sus propias notas. ¿Lo has usado en tu enseñanza? Cuéntalo en [Issues](https://github.com/vTanco/educa-navarra-mcp/issues).
 
 ## Privacidad
@@ -220,7 +253,7 @@ En el Educa real se ha comprobado que, al escribir una nota, Educa muestra *Acep
 - **Se ejecuta en tu ordenador.** No hay ningún servidor intermedio: el conector maneja un navegador en tu equipo, como harías tú.
 - **Tu contraseña no pasa por el chat.** Se guarda en tu ordenador y solo se escribe en el formulario de acceso de Educa.
 - **Solo visita Educa** (`*.navarra.es`). Cualquier otra dirección se bloquea.
-- **Ojo:** los nombres, notas y observaciones que aparecen en la vista previa sí pasan por la conversación con la IA. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
+- **Ojo:** los nombres, notas y observaciones que aparecen en la vista previa sí pasan por la conversación con la IA, y también lo que cuentes para redactar un parte. Consulta la política de tu centro sobre el uso de IA con datos del alumnado. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
 ## Preguntas frecuentes
 

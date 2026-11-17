@@ -68,6 +68,7 @@ Opcional. Se busca en `EDUCA_CONFIG`, en `educa.config.json` de la carpeta actua
 | `save.buttonSelector` | Selector del botón de guardar si no se llama *Guardar/Grabar/Aceptar* |
 | `noGradeGroups` | Grupos en los que no pones notas; el conector se niega a escribir en ellos |
 | `gradesScreen.path`, `gradesScreen.menu` | Ruta de Educa-Gestión y entradas de menú hasta la pantalla de calificaciones, si en tu centro son distintas |
+| `incidentScreen.path`, `incidentScreen.menu` | Ruta de Educa-Gestión y entradas de menú hasta los informes de convivencia (por defecto *GESTIÓN ACADÉMICA → CONVIVENCIA*) |
 | `forbiddenClickPattern` | Botones que nunca se pulsan |
 
 ## Inicio de sesión automático
