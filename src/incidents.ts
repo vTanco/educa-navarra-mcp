@@ -113,6 +113,13 @@ export class IncidentScreen {
     const page = await this.page();
     const form = this.form(page);
     if (!(await form.isVisible().catch(() => false))) return;
+    // Primero, cualquier diálogo abierto encima del formulario (sesiones, conductas)
+    for (let i = 0; i < 3; i++) {
+      const close = page.locator(".p-dialog button[data-pc-name=pcclosebutton]").filter({ visible: true }).last();
+      if ((await close.count()) === 0) break;
+      await close.click({ timeout: 5000 }).catch(() => undefined);
+      await page.waitForTimeout(300);
+    }
     const button = form.locator(".botonesAccionFinales button").filter({ hasText: /^\s*(Cancelar|Volver)\s*$/i }).filter({ visible: true }).first();
     if ((await button.count()) === 0) return;
     await button.click();
@@ -250,10 +257,22 @@ export class IncidentScreen {
     return this.form(page).locator("app-ubicacion-convivencia p-select").first();
   }
 
+  /** Pulsa un botón que abre un diálogo; si el diálogo ya se ha abierto (Educa lo abre a veces solo), no insiste. */
+  private async clickOpening(page: Page, button: Locator, dlg: Locator): Promise<void> {
+    if (await dlg.isVisible().catch(() => false)) return;
+    await settle(page, 200);
+    if (await dlg.isVisible().catch(() => false)) return;
+    try {
+      await button.click({ timeout: 8000 });
+    } catch (e) {
+      if (!(await dlg.isVisible().catch(() => false))) throw e;
+    }
+  }
+
   private async openConductDialog(page: Page): Promise<Locator> {
     const button = this.form(page).locator("button").filter({ hasText: /^\s*(Añadir conducta|Modificar anotaci[oó]n)\s*$/i }).first();
-    await button.click();
     const dlg = this.dialog(page, "app-seleccionar-anotacion-codificada");
+    await this.clickOpening(page, button, dlg);
     await dlg.waitFor({ state: "visible", timeout: 8000 }).catch(() => {
       throw new Error('No se ha abierto el diálogo "Añadir conducta".');
     });
@@ -347,9 +366,13 @@ export class IncidentScreen {
   private async setSession(page: Page, time: string | null): Promise<string | null> {
     const loc = this.form(page).locator("app-ubicacion-convivencia");
     const button = loc.locator("button").filter({ hasText: /^\s*(Seleccionar|Modificar) sesi[oó]n\s*$/i }).first();
-    if (!(await button.isVisible().catch(() => false))) return null; // este espacio no pide sesión
-    await button.click();
     const dlg = this.dialog(page, "app-seleccionar-sesion-alumno");
+    // Educa abre la lista de sesiones sola al tener fecha y espacio; si no, se pulsa el botón
+    await settle(page, 300);
+    if (!(await dlg.isVisible().catch(() => false))) {
+      if (!(await button.isVisible().catch(() => false))) return null; // este espacio no pide sesión
+      await this.clickOpening(page, button, dlg);
+    }
     await dlg.waitFor({ state: "visible", timeout: 8000 }).catch(() => {
       throw new Error("No se ha abierto la lista de sesiones del alumno.");
     });

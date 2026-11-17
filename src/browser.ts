@@ -534,6 +534,8 @@ export async function settle(page: Page, extraMs = 800): Promise<void> {
   await page.waitForLoadState("domcontentloaded").catch(() => undefined);
   await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
   await page.waitForTimeout(extraMs);
+  // Capa "cargando" de Educa-Gestión: tapa la página mientras carga datos
+  await page.locator(".cargandoApp").filter({ visible: true }).first().waitFor({ state: "hidden", timeout: 15_000 }).catch(() => undefined);
 }
 
 // ---------- Funciones que se ejecutan dentro de la página ----------

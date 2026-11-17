@@ -119,8 +119,14 @@ export async function convivenciaRoute(url: URL, req: IncomingMessage, send: (ht
             });
           }
           bindSelect(document.getElementById("espacio"), PLACES, v => { st.espacio = v; st.sesion = ""; sesionBox(); });
+          // Como en el Educa real: capa "cargando" y, con fecha y espacio, la lista de sesiones se abre sola
+          function cargando(then) {
+            const c = document.createElement("lib-cargando"); c.innerHTML = '<div class="cargandoApp" style="position:fixed;inset:0;background:rgba(255,255,255,.4)"></div>';
+            document.body.appendChild(c); setTimeout(() => { c.remove(); then && then(); }, 700);
+          }
           function sesionBox() {
             const box = document.getElementById("sesionBox");
+            if (st.espacio === "Sesión presencial" && st.fecha && !st.sesion && !document.querySelector("app-seleccionar-sesion-alumno")) cargando(abrirSesiones);
             if (st.espacio !== "Sesión presencial") { box.innerHTML = ""; return; }
             box.innerHTML = (st.sesion ? '<span class="labelSesion">' + st.sesion + "</span>" : "") + '<button type="button" class="botonRojoPeke"' + (st.fecha ? "" : " disabled") + ' onclick="abrirSesiones()"><span>' + (st.sesion ? "Modificar sesión" : "Seleccionar sesión") + "</span></button>";
           }
@@ -137,7 +143,7 @@ export async function convivenciaRoute(url: URL, req: IncomingMessage, send: (ht
             const f = String(d).padStart(2, "0") + "/" + String(view.getMonth() + 1).padStart(2, "0") + "/" + view.getFullYear();
             document.getElementById("fecha").value = f; st.fecha = f; st.sesion = ""; document.querySelector(".p-datepicker-panel").remove(); sesionBox(); dirty();
           }
-          function dialog(inner) { const d = document.createElement("div"); d.className = "p-dialog"; d.setAttribute("role", "dialog"); d.innerHTML = inner; document.body.appendChild(d); return d; }
+          function dialog(inner) { const d = document.createElement("div"); d.className = "p-dialog"; d.setAttribute("role", "dialog"); d.innerHTML = '<div class="p-dialog-header"><button type="button" data-pc-name="pcclosebutton">x</button></div>' + inner; d.querySelector("[data-pc-name=pcclosebutton]").addEventListener("click", () => d.remove()); document.body.appendChild(d); return d; }
           function abrirSesiones() {
             const filas = [["08:30 - 09:25", "Matemáticas ES3", "Otra Docente", false], ["12:40 - 13:35", "Tecnología y Digitalización ES3", "Profe Demo", true]];
             const d = dialog('<app-seleccionar-sesion-alumno><table><thead><tr><th></th><th class="hora">Inicio - fin</th><th>Asignatura</th><th>Docente</th></tr></thead><tbody>' + filas.map(f => '<tr class="p-datatable-selectable-row' + (f[3] ? " daClase" : "") + '"><td><p-radiobutton><input type="radio" name="ses"></p-radiobutton></td><td class="hora"><span>' + f[0] + "</span></td><td><span>" + f[1] + "</span></td><td><span>" + f[2] + "</span></td></tr>").join("") + '</tbody></table><lib-btn-aceptar-cancelar><div class="botones"><button type="button" class="botonRojo" id="sesOk"><span>Cerrar</span></button></div></lib-btn-aceptar-cancelar></app-seleccionar-sesion-alumno>');
