@@ -26,7 +26,7 @@ También escribe las observaciones para las familias y redacta y registra partes
 
 </div>
 
-> **Herramienta personal y no oficial.** No tiene ningún vínculo con el Departamento de Educación del Gobierno de Navarra. Los datos del alumnado que el conector lee o muestra pasan por Claude. Antes de usarla, lee [Protección de datos](#protección-de-datos) y el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
+> **Herramienta personal y no oficial.** No tiene ningún vínculo con el Departamento de Educación del Gobierno de Navarra. Está diseñada para ayudar a cumplir la Ley Orgánica 3/2018 de Protección de Datos (LOPDGDD) y el RGPD: con el **modo privado**, activado por defecto, Claude trabaja con códigos y no ve los nombres del alumnado. Antes de usarla, lee [Protección de datos](#protección-de-datos) y el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/flujo.svg" width="100%" alt="Cinco pasos: tu Excel, vista previa, escribe en pantalla sin guardar, tú revisas y pulsa Aceptar solo si lo confirmas.">
@@ -44,6 +44,7 @@ También escribe las observaciones para las familias y redacta y registra partes
 | **Escribe sin guardar** | Rellena las notas en la ventana de Educa para que las revises. |
 | **Añade observaciones** | Si tu fichero tiene una columna *Observaciones*, escribe también el comentario para las familias de cada alumno. |
 | **Guarda solo si lo dices** | Pulsa *Aceptar* únicamente cuando lo confirmas en el chat. |
+| **Modo privado** | Claude ve a cada alumno con un código (A01, A02…), no su nombre. La vista previa con nombres se abre solo en tu ordenador. Activado por defecto. |
 | **Redacta partes** | Le cuentas lo que ha pasado y prepara el informe de convivencia con tono formal, lo clasifica según la normativa de Navarra y lo registra en Educa cuando das el visto bueno. |
 
 Sirve para **ESO** (IN, SU, BI, NT, SB), **Bachillerato** (nota sobre 10) y **FP de Grado Medio y Superior**: lee la escala de cada pantalla en vez de suponerla.
@@ -68,6 +69,7 @@ Elige una opción. Las tres instalan lo mismo.
    | Ajuste | Para qué |
    |---|---|
    | Usuario y contraseña de Educa | Para que Claude entre solo. Si los dejas vacíos, entras tú en la ventana que se abre. La contraseña se guarda cifrada en tu ordenador. |
+   | Modo privado | Activado por defecto (recomendado). Claude trabaja con códigos en vez de nombres. Ver [Protección de datos](#protección-de-datos). |
    | Grupos en los que no pongo notas | Por ejemplo, si compartes docencia: `ESO 2º D, ESO 2º E`. Podrás consultarlos, pero el conector se negará a escribir en ellos. |
    | Carpeta de notas | Donde guardas tus Excel. Deja la que sale (*Documentos/Notas Educa*) y créala si no existe. |
 
@@ -149,7 +151,7 @@ sequenceDiagram
 | Aceptar un nombre dudoso | *"Sí, Maite Etxeberria es la misma."* |
 | Ver la pantalla | *"Haz una captura de la pantalla."* |
 | Aprender a preparar el Excel | *"¿Cómo preparo mi Excel de notas?"* |
-| Poner un parte | *"Ponle un parte a Iker Muro, de 3º D: hoy en Tecnología se ha negado a guardar el móvil y me ha contestado de malas maneras."* |
+| Poner un parte | *"Ponle un parte a un alumno de 3º D: hoy en Tecnología se ha negado a guardar el móvil y me ha contestado de malas maneras. Lo elijo en la ventana."* |
 
 En Claude Desktop tienes además cuatro atajos en el menú **+** del chat: **Meter notas en Educa**, **Revisar mis notas en Educa**, **Cómo preparo mi Excel de notas** y **Poner un parte de convivencia**.
 
@@ -171,7 +173,7 @@ Lo mismo con la asignatura (*"Tecnología"*) y la evaluación (*"2"*, *"2a"*, *"
   <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/partes.svg" width="100%" alt="Cinco pasos: se lo cuentas, redacta el relato, propone el tipo de conducta, rellena el parte sin guardar y pulsa Guardar solo si lo decides.">
 </p>
 
-Cuéntale a Claude, con tus palabras, a quién, de qué grupo, qué ha pasado, cuándo y dónde. Él:
+Cuéntale a Claude, con tus palabras, de qué grupo, qué ha pasado, cuándo y dónde. Con el modo privado no hace falta decirle el nombre: se abre la lista del grupo en la ventana de Educa y **pulsas tú en el alumno**. Claude lo verá como un código y el relato no llevará nombres. Él:
 
 1. **Redacta el relato** de *Observaciones de lo sucedido* con tono formal y objetivo: hechos en orden, en tercera persona, sin juicios ni nombres de otros alumnos. No inventa nada; si falta un dato, te lo pregunta.
 2. **Propone el tipo de conducta** entre los que ofrece Educa en tu centro, con su artículo del Decreto Foral 47/2010 (contraria o gravemente perjudicial para la convivencia). Si hay duda, decides tú.
@@ -222,7 +224,9 @@ Todos los consejos, con ejemplos para interinos que cambian de centro, en la **[
   <img src="https://raw.githubusercontent.com/vTanco/educa-navarra-mcp/main/assets/vista-previa.svg" width="100%" alt="Ejemplo de vista previa con datos inventados: tabla con alumno en el fichero, alumno en Educa, nota actual, nota nueva y estado.">
 </p>
 
-Si el fichero trae observaciones, la vista previa añade una columna con el texto que se escribirá para cada alumno.
+Con el modo privado, esta tabla con nombres y observaciones se abre en una **pestaña del navegador del conector, solo en tu ordenador**. En el chat, Claude te enseña el resumen y los avisos con códigos (A01, A02…). Revisa la pestaña y dile *"vale, escríbelas"*.
+
+Si el fichero trae observaciones, la vista previa añade una columna con el texto que se escribirá para cada alumno. Si le pides a Claude que redacte las observaciones, usará `{nombre}` donde va el nombre del alumno y el conector lo cambia en tu ordenador por su nombre de pila.
 
 Los nombres que solo coinciden en parte se marcan como *aproximados* y no se escriben salvo que lo confirmes. También avisa de alumnos del fichero que no están en Educa y de alumnos de Educa que no tienen nota en el fichero.
 
@@ -323,16 +327,29 @@ Educa no tiene una conexión oficial para aplicaciones, así que el conector hac
 
 Léelo antes de usar el conector con datos reales.
 
-- **Herramienta personal y no oficial.** La ha hecho un docente por su cuenta. No está desarrollada, respaldada ni supervisada por el Departamento de Educación del Gobierno de Navarra, ni tiene vínculo alguno con él.
-- **Los datos pasan por Claude.** Todo lo que el conector lee o muestra (nombres del alumnado, notas, observaciones para las familias, relatos de partes de convivencia) y lo que tú cuentes en el chat se envía a Claude como parte de la conversación, y puede quedar guardado en tu historial de conversaciones.
-- **Tú decides si puedes usarla.** Cada docente la usa bajo su propia responsabilidad y conforme a las normas de su centro y a las indicaciones de la persona delegada de protección de datos (DPD) del Departamento de Educación. Si tienes dudas, consúltalo antes.
-- **Desactiva el entrenamiento.** En Claude, ve a **Ajustes → Privacidad** y desactiva la opción que permite usar tus conversaciones para mejorar los modelos (*Ayudar a mejorar Claude*).
-- **El desarrollador no recibe nada.** No hay servidores propios: el conector se ejecuta en tu ordenador, solo visita Educa (`*.navarra.es`) y no recoge credenciales, datos del alumnado ni estadísticas de uso.
-- **Tu contraseña no pasa por el chat.** Se guarda en tu ordenador y solo se escribe en el formulario de acceso de Educa.
-- **Comparte lo mínimo.** Usa ficheros con solo las columnas necesarias, no pidas capturas si no hacen falta y, en los partes, cuenta solo los hechos necesarios, sin nombres de otros alumnos.
-- **Sin garantía.** Se distribuye con [licencia MIT](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE), tal cual y sin garantía de ningún tipo. Revisa siempre la pantalla de Educa antes de guardar.
+El conector está **diseñado para ayudar a cumplir la Ley Orgánica 3/2018 de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD) y el Reglamento General de Protección de Datos (RGPD)**, que son la normativa a la que Educa somete sus datos y a quien los usa. Las medidas que aplica:
 
-Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
+| Medida | Qué hace |
+|---|---|
+| **Modo privado** (activado por defecto) | Claude ve a cada alumno con un código (A01, A02…). No recibe nombres, NIA ni el texto de las observaciones. La tabla de códigos solo existe en la memoria de tu ordenador mientras usas el conector. |
+| **Vista previa local** | La tabla con nombres se abre en una pestaña del navegador del conector, en tu ordenador. No pasa por el chat. |
+| **Partes sin nombres** | Eliges al alumno en la ventana de Educa. El conector rechaza un relato que contenga nombres o apellidos de alumnos del grupo. |
+| **Sin servidores propios** | Todo se ejecuta en tu ordenador. El desarrollador no recibe credenciales, datos del alumnado ni estadísticas de uso. Solo se visita Educa (`*.navarra.es`). |
+| **Tu contraseña no pasa por el chat** | Se guarda en tu ordenador (cifrada en Claude Desktop) y solo se escribe en el formulario de acceso de Educa. |
+| **Nada se guarda sin ti** | Notas y partes solo se registran cuando lo confirmas. Nunca cierra, firma ni publica una evaluación. |
+| **Capturas con caducidad** | Las capturas que se hacen al guardar se borran solas a los 30 días. |
+
+**Qué sigue dependiendo de ti y de tu centro.** Ninguna herramienta puede garantizar por sí sola el cumplimiento: el responsable de los datos de Educa es el Departamento de Educación, y cada docente responde del uso que hace de ellos.
+
+- Mantén activado el modo privado salvo que tu centro o el Departamento hayan autorizado expresamente tratar datos del alumnado con esta herramienta de IA.
+- Aun así, lo que escribas tú en el chat sí llega a Claude: no escribas nombres de alumnos ni datos de salud o familiares.
+- En Claude, desactiva en **Ajustes → Privacidad** la opción *Ayudar a mejorar Claude* y borra las conversaciones que no necesites.
+- No uses el conector en un ordenador compartido: el navegador recuerda la sesión de Educa.
+- Ante cualquier duda, consulta a la persona delegada de protección de datos (DPD) del Departamento de Educación.
+
+**Desactivar el modo privado** (solo con autorización): en Claude Desktop, **Ajustes → Extensiones → Educa Navarra** y desmarca *Modo privado*. En las opciones B y C, añade `"env": { "EDUCA_PRIVATE_MODE": "0" }` a la configuración. Para volver a activarlo, márcalo de nuevo o borra esa línea.
+
+Herramienta no oficial, distribuida con [licencia MIT](https://github.com/vTanco/educa-navarra-mcp/blob/main/LICENSE), tal cual y sin garantía. Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blob/main/AVISO-LEGAL.md).
 
 ## Preguntas frecuentes
 
@@ -340,6 +357,12 @@ Más detalle en el [aviso legal](https://github.com/vTanco/educa-navarra-mcp/blo
 <summary><b>¿Puede guardar algo sin que yo me entere?</b></summary>
 
 No. Guardar exige una confirmación expresa en el chat, y Claude Desktop te pide permiso antes de usar esa herramienta. Además, nunca pulsa botones de cerrar, firmar, bloquear, borrar o publicar.
+</details>
+
+<details>
+<summary><b>¿Claude sabe cómo se llaman mis alumnos?</b></summary>
+
+Con el modo privado activado (lo está por defecto), no: ve códigos como A01 o A07, y tú ves los nombres en la pestaña de vista previa de tu ordenador. Lo único que llega a Claude con nombre es lo que tú escribas en el chat, así que evita escribirlos. Los códigos cambian cada vez que abres Claude.
 </details>
 
 <details>
@@ -381,6 +404,7 @@ npm install
 npm run build
 npm test          # ficheros, conversión de notas y emparejamiento de nombres
 npm run smoke     # recorrido completo contra un Educa simulado
+npm run smoke:private  # comprueba que en modo privado ninguna respuesta lleva nombres
 npm run pack:mcpb # genera build/educa-navarra-mcp.mcpb para Claude Desktop
 ```
 

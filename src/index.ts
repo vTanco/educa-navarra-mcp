@@ -27,6 +27,7 @@ import { EducaBrowser, FieldGone } from "./browser.js";
 import { loadConfig, PROJECT_DIR } from "./config.js";
 import { registerGuide, SERVER_INSTRUCTIONS } from "./guide.js";
 import { registerIncidentTools } from "./incident-tools.js";
+import { localPage, Privacy } from "./privacy.js";
 import { blockedGroup, buildPlan, cleanComment, describeScale, hasWork, normalize as normalizeName, parseGradesFile, sameValue, summarizeComments, summarizePlan, type CommentStatus, type GradePlan, type GradeScale, type GradeSheet, type InputGrade, type PlanItem } from "./grades.js";
 
 const CHARACTER_LIMIT = 25_000;
@@ -45,6 +46,8 @@ if (process.stdin.isTTY) {
 }
 const { config, path: configPath } = loadConfig();
 const browser = new EducaBrowser(config);
+const privacy = new Privacy(config.privateMode);
+const purged = browser.purgeOldScreenshots(config.screenshotRetentionDays);
 
 /** Lanza un error si la pantalla abierta es de un grupo en el que el docente ha dicho que no pone notas. */
 function assertGroupAllowed(sheet: GradeSheet, action: string): void {
@@ -77,12 +80,13 @@ let lastFilledPlan: StoredPlan | null = null;
 
 type Content = { content: { type: "text"; text: string }[]; structuredContent?: Record<string, unknown> };
 
-function text(t: string): Content {
+function text(raw: string): Content {
+  const t = privacy.redact(raw);
   return { content: [{ type: "text", text: t.length > CHARACTER_LIMIT ? `${t.slice(0, CHARACTER_LIMIT)}\n\n[Respuesta recortada: usa response_format="json" o filtra más.]` : t }] };
 }
 
 function json(data: Record<string, unknown>): Content {
-  return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }], structuredContent: data };
+  return { content: [{ type: "text", text: privacy.redact(JSON.stringify(data, null, 2)) }], structuredContent: data };
 }
 
 const ResponseFormat = z.enum(["markdown", "json"]).default("markdown").describe("'markdown' para leerlo, 'json' para datos estructurados");
@@ -141,11 +145,25 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale):
       ? [`- Observaciones para las familias: se escribirán **${cc.cambia}**, ya estaban igual ${cc.igual}, no se tocan porque ya tenían otras ${cc.conserva}, con problemas ${cc.no_valida + cc.bloqueado + cc.sin_campo}`]
       : []),
     "",
-    withComments ? "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado | Observaciones |" : "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado |",
-    withComments ? "|---|---|---|---|---|---|" : "|---|---|---|---|---|"
+    ...(privacy.enabled
+      ? [
+          "Modo privado: los alumnos aparecen con código. El docente tiene la tabla completa, con nombres y observaciones, en una pestaña del navegador del conector (solo en su ordenador). Pídele que la revise allí.",
+          "",
+          withComments ? "| Alumno | Nota actual | Nota nueva | Estado | Observaciones |" : "| Alumno | Nota actual | Nota nueva | Estado |",
+          withComments ? "|---|---|---|---|---|" : "|---|---|---|---|"
+        ]
+      : [
+          withComments ? "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado | Observaciones |" : "| Alumno (fichero) | Alumno (Educa) | Nota actual | Nota nueva | Estado |",
+          withComments ? "|---|---|---|---|---|---|" : "|---|---|---|---|---|"
+        ])
   ];
   for (const i of plan.items) {
     const status = `${STATUS_LABEL[i.status]}${i.fuzzyMatch ? " (nombre aproximado)" : ""}${i.note ? `: ${i.note}` : ""}`;
+    if (privacy.enabled) {
+      const base = `| ${privacy.show(i.educaName ?? i.student)} | ${i.currentDisplay ?? "—"} | ${i.newDisplay ?? (i.grade || "—")} | ${status} |`;
+      lines.push(withComments ? `${base} ${i.comment ? (i.commentStatus ? COMMENT_LABEL[i.commentStatus] : "—") : "—"} |` : base);
+      continue;
+    }
     const base = `| ${i.student} | ${i.educaName ?? "—"} | ${i.currentDisplay ?? "—"} | ${i.newDisplay ?? (i.grade || "—")} | ${status} |`;
     if (!withComments) {
       lines.push(base);
@@ -157,16 +175,36 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale):
     lines.push(`${base} ${obs} |`);
   }
   if (plan.rowsWithoutGrade.length) {
-    lines.push("", `**Alumnos de Educa sin nota en el fichero (${plan.rowsWithoutGrade.length}):** ${plan.rowsWithoutGrade.join(", ")}`);
+    lines.push("", `**Alumnos de Educa sin nota en el fichero (${plan.rowsWithoutGrade.length}):** ${plan.rowsWithoutGrade.map(n => privacy.show(n)).join(", ")}`);
   }
   if (cc.conserva) lines.push("", `Alumnos que ya tenían observaciones en Educa y no se sustituyen: ${cc.conserva}. Si el profesor quiere reemplazarlas, repite la vista previa con overwrite_comments=true.`);
   lines.push(
     "",
-    "Nada se ha cambiado todavía. Enseña esta tabla al profesor (con el texto completo de las observaciones si lo pide); si da el visto bueno, llama a educa_fill_grades con este plan_id" +
+    (privacy.enabled ? "Nada se ha cambiado todavía. Pide al profesor que revise la vista previa en la pestaña local del navegador;" : "Nada se ha cambiado todavía. Enseña esta tabla al profesor (con el texto completo de las observaciones si lo pide);") + " si da el visto bueno, llama a educa_fill_grades con este plan_id" +
       (fuzzy ? " (con include_fuzzy=true solo si confirma las coincidencias aproximadas)" : "") +
       "."
   );
   return lines.join("\n");
+}
+
+/** Vista previa con nombres reales para la pestaña local (modo privado). No se envía al modelo. */
+function previewPage(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale): string {
+  const { plan } = stored;
+  const counts = summarizePlan(plan);
+  const withComments = plan.items.some(i => i.comment);
+  const headers = ["Código", "Alumno (fichero)", "Alumno (Educa)", "Nota actual", "Nota nueva", "Estado", ...(withComments ? ["Observaciones"] : [])];
+  const rows = plan.items.map(i => [
+    privacy.code(i.educaName ?? i.student),
+    i.student,
+    i.educaName ?? "—",
+    i.currentDisplay ?? "—",
+    i.newDisplay ?? (i.grade || "—"),
+    `${STATUS_LABEL[i.status].replace(/^\S+\s/u, "")}${i.fuzzyMatch ? " (nombre aproximado)" : ""}${i.note ? `: ${i.note}` : ""}`,
+    ...(withComments ? [i.comment ? `${i.commentStatus ? `[${COMMENT_LABEL[i.commentStatus]}] ` : ""}${i.comment}` : "—"] : [])
+  ]);
+  for (const n of plan.rowsWithoutGrade) rows.push([privacy.code(n), "—", n, "", "", "sin nota en el fichero", ...(withComments ? [""] : [])]);
+  const intro = `Plan ${stored.id} · ${sheet.context ?? "pantalla de notas"} · columna ${stored.column ?? sheet.column ?? "(única)"} · ${scale.description}. Se escribirán ${counts.cambia}; ya estaban igual ${counts.igual}.`;
+  return localPage("Vista previa de notas", intro, headers, rows, "Nada se ha escrito todavía en Educa. Si está todo bien, díselo a Claude en el chat. Puedes cerrar esta pestaña cuando quieras.");
 }
 
 // ---------- Servidor ----------
@@ -174,7 +212,7 @@ function planMarkdown(stored: StoredPlan, sheet: GradeSheet, scale: GradeScale):
 function createServer(): McpServer {
   const server = new McpServer({ name: "educa-mcp", version: PACKAGE_VERSION }, { instructions: SERVER_INSTRUCTIONS });
   registerGuide(server);
-  const incidentTools = registerIncidentTools(server, browser, config, requireLogin);
+  const incidentTools = registerIncidentTools(server, browser, config, requireLogin, privacy);
 
   server.registerTool(
     "educa_login",
@@ -245,7 +283,11 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
     },
     async ({ max_items, response_format }) => {
       await requireLogin();
+      // En modo privado, los alumnos de una tabla de notas visible reciben código antes de resumir la página
+      if (privacy.enabled) await browser.readGradeSheet().then(sh => sh.rows.forEach(r => privacy.code(r.name))).catch(() => undefined);
       const summary = await browser.inspect(max_items);
+      // En modo privado no se devuelven filas de ejemplo de las tablas (suelen ser alumnos)
+      if (privacy.enabled) for (const f of summary.frames) for (const t of f.tables) t.sample = [];
       if (response_format === "json") return json(summary as unknown as Record<string, unknown>);
       const lines = [`# ${summary.title}`, summary.url];
       for (const f of summary.frames) {
@@ -255,6 +297,7 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
         for (const t of f.tables) {
           lines.push(`- Tabla ${t.index}: ${t.rows} filas (${t.rowsWithFields} con campos editables). Cabeceras: ${t.headers.join(" | ") || "(sin cabecera)"}`);
           for (const s of t.sample) lines.push(`  - ${s.join(" | ")}`);
+          if (privacy.enabled && t.rows > 0) lines.push("  (filas ocultas: modo privado)");
         }
         if (f.fields.length) {
           lines.push("Campos y desplegables:");
@@ -279,6 +322,9 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
       annotations: { readOnlyHint: true, openWorldHint: true }
     },
     async ({ selector, frame_url_contains, max_chars }) => {
+      if (privacy.enabled) {
+        throw new Error('Esta herramienta está desactivada en modo privado porque devolvería todo lo que hay en pantalla, incluidos nombres del alumnado. Usa educa_inspect_page. Si hace falta para diagnosticar un problema, el docente puede desactivar temporalmente "Modo privado" en los ajustes del conector.');
+      }
       await requireLogin();
       const dumps = await browser.dumpHtml(selector, max_chars, frame_url_contains);
       if (!dumps.length) throw new Error(selector ? `Ningún marco tiene un elemento que encaje con ${selector}.` : "No hay marcos que leer.");
@@ -363,12 +409,13 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
         column: sheet.column,
         editable_columns: sheet.editableColumns,
         comments_available: sheet.rows.some(r => r.comment),
+        private_mode: privacy.enabled,
         students: sheet.rows.map(r => ({
-          name: r.name,
-          ...(r.studentId ? { id: r.studentId } : {}),
+          name: privacy.show(r.name),
+          ...(r.studentId && !privacy.enabled ? { id: r.studentId } : {}),
           grade: r.field ? (r.field.valueText || r.field.value).trim() : null,
           editable: r.field ? !r.field.disabled : false,
-          ...(r.comment ? { comment: r.comment.value.trim() } : {})
+          ...(r.comment ? (privacy.enabled ? (r.comment.value.trim() ? { has_comment: true } : {}) : { comment: r.comment.value.trim() }) : {})
         }))
       };
       if (response_format === "json") return json(data);
@@ -386,7 +433,11 @@ Llámala antes que cualquier otra herramienta. Avisa al profesor de que debe ini
         obs ? "| # | Alumno | Nota actual | Observaciones |" : "| # | Alumno | Nota actual |",
         obs ? "|---|---|---|---|" : "|---|---|---|"
       ];
-      data.students.forEach((s, i) => lines.push(`| ${i + 1} | ${s.name} | ${s.grade || "(vacía)"}${s.editable ? "" : " 🔒"} |${obs ? ` ${s.comment ? cell(shorten(s.comment)) : "(vacías)"} |` : ""}`));
+      if (privacy.enabled) lines.splice(lines.length - 2, 0, "Modo privado: los alumnos aparecen con código (A01, A02...). Los nombres solo se ven en el ordenador del docente.", "");
+      data.students.forEach((s, i) => {
+        const c = "comment" in s ? cell(shorten(String(s.comment))) : "has_comment" in s ? "(tiene; texto oculto en modo privado)" : "(vacías)";
+        lines.push(`| ${i + 1} | ${s.name} | ${s.grade || "(vacía)"}${s.editable ? "" : " 🔒"} |${obs ? ` ${c} |` : ""}`);
+      });
       return text(lines.join("\n"));
     }
   );
@@ -516,7 +567,19 @@ Basta parte del nombre si no es ambiguo: group="1ºAB", subject="Tecnología", e
     },
     async ({ file_path, sheet, name_column, grade_column, id_column, comment_column }) => {
       const res = await parseGradesFile(file_path, { sheet, nameColumn: name_column, gradeColumn: grade_column, idColumn: id_column, commentColumn: comment_column });
-      return json({ headers: res.headers, count: res.grades.length, comment_column: res.commentColumn, with_comment: res.grades.filter(g => g.comment).length, grades: res.grades, students_without_grade: res.skipped });
+      const withComment = res.grades.filter(g => g.comment).length;
+      if (privacy.enabled) {
+        return json({
+          private_mode: true,
+          headers: res.headers,
+          count: res.grades.length,
+          comment_column: res.commentColumn,
+          with_comment: withComment,
+          students_without_grade: res.skipped.length,
+          note: "Modo privado: la lista de alumnos y notas no se envía al chat. Para verla junto a Educa, abre la pantalla de notas y usa educa_preview_grades: el docente verá la tabla con nombres en una pestaña local."
+        });
+      }
+      return json({ headers: res.headers, count: res.grades.length, comment_column: res.commentColumn, with_comment: withComment, grades: res.grades, students_without_grade: res.skipped });
     }
   );
 
@@ -552,7 +615,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
     async args => {
       if (!args.file_path && !args.grades?.length) throw new Error("Indica file_path o grades.");
       await requireLogin();
-      let inputs: InputGrade[] = (args.grades ?? []).filter(g => g.grade.trim() || g.comment?.trim());
+      let inputs: InputGrade[] = (args.grades ?? []).filter(g => g.grade.trim() || g.comment?.trim()).map(g => ({ ...g, student: privacy.resolve(g.student) }));
       if (args.file_path) {
         inputs = (await parseGradesFile(args.file_path, { sheet: args.sheet, nameColumn: args.name_column, gradeColumn: args.grade_column, idColumn: args.id_column, commentColumn: args.comment_column })).grades;
       }
@@ -566,8 +629,26 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       const scale = describeScale(sheet, config.grades, args.stage);
       const stored: StoredPlan = { id: randomUUID().slice(0, 8), column: args.column ?? null, createdAt: Date.now(), plan, filled: false };
       plans.set(stored.id, stored);
+      if (privacy.enabled) {
+        // Todos los nombres de la tabla y del fichero reciben código antes de responder
+        for (const r of sheet.rows) privacy.code(r.name);
+        for (const i of plan.items) privacy.code(i.educaName ?? i.student);
+        await browser.showLocal(previewPage(stored, sheet, scale)).catch(() => undefined);
+      }
       if (args.response_format === "json") {
-        return json({ plan_id: stored.id, column: sheet.column, context: sheet.context ?? null, scale, summary: summarizePlan(plan), ...(plan.items.some(i => i.commentStatus) ? { comments: summarizeComments(plan) } : {}), items: plan.items, rows_without_grade: plan.rowsWithoutGrade });
+        const items = privacy.enabled
+          ? plan.items.map(i => ({
+              student: privacy.show(i.educaName ?? i.student),
+              status: i.status,
+              current: i.currentDisplay ?? null,
+              new: i.newDisplay ?? (i.grade || null),
+              fuzzy_match: Boolean(i.fuzzyMatch),
+              ...(i.note ? { note: i.note } : {}),
+              ...(i.commentStatus ? { comment_status: i.commentStatus } : {})
+            }))
+          : plan.items;
+        const rows = privacy.enabled ? plan.rowsWithoutGrade.map(n => privacy.show(n)) : plan.rowsWithoutGrade;
+        return json({ plan_id: stored.id, private_mode: privacy.enabled, column: sheet.column, context: sheet.context ?? null, scale, summary: summarizePlan(plan), ...(plan.items.some(i => i.commentStatus) ? { comments: summarizeComments(plan) } : {}), items, rows_without_grade: rows });
       }
       return text(planMarkdown({ ...stored, column: sheet.column }, sheet, scale));
     }
@@ -592,6 +673,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       const stored = plans.get(plan_id);
       if (!stored) throw new Error(`No existe el plan ${plan_id}. Genera uno con educa_preview_grades.`);
       if (Date.now() - stored.createdAt > 30 * 60_000) throw new Error("El plan tiene más de 30 minutos; vuelve a generar la vista previa por si la tabla ha cambiado.");
+      await browser.focusEduca();
 
       let sheet = await browser.readGradeSheet(stored.column ?? undefined);
       if (sheet.autoSaves && !confirm_autosave) {
@@ -603,7 +685,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       for (const item of todo) {
         const row = sheet.rows.find(r => r.index === item.rowIndex);
         if (!row || row.name !== item.educaName || (item.status === "cambia" && !row.field) || (item.commentStatus === "cambia" && !row.comment)) {
-          throw new Error(`La tabla de Educa ha cambiado desde la vista previa (no encuentro a ${item.educaName} en su fila). ¿Has cambiado de grupo, materia o evaluación? Vuelve a hacer educa_preview_grades.`);
+          throw new Error(`La tabla de Educa ha cambiado desde la vista previa (no encuentro a ${privacy.show(item.educaName)} en su fila). ¿Has cambiado de grupo, materia o evaluación? Vuelve a hacer educa_preview_grades.`);
         }
       }
 
@@ -663,7 +745,7 @@ Enseña siempre el resultado al profesor antes de rellenar.`,
       const skippedFuzzy = stored.plan.items.filter(i => hasWork(i) && i.fuzzyMatch && !include_fuzzy).length;
       const what = `${ok} de ${grades.length} notas${comments.length ? ` y ${okComments} de ${comments.length} observaciones` : ""}`;
       const lines = [sheet.autoSaves ? `Puestas ${what}. **Esta pantalla guarda cada nota al elegirla, así que ya están guardadas en Educa** (sin publicar ni cerrar la evaluación).` : `Escritas ${what} en pantalla. **Todavía no se ha guardado nada en Educa.**`];
-      for (const r of results.filter(x => !x.ok)) lines.push(`- ❌ ${r.educaName} (${r.kind}): ${r.note}`);
+      for (const r of results.filter(x => !x.ok)) lines.push(`- ❌ ${privacy.show(r.educaName)} (${r.kind}): ${r.note}`);
       if (skippedFuzzy) lines.push(`- ${skippedFuzzy} filas con nombre aproximado no se han tocado (include_fuzzy=false).`);
       if (sheet.autoSaves) return text(lines.join("\n"));
       if (okComments && (await browser.hasPendingChanges()) === false) {
@@ -726,7 +808,7 @@ IMPORTANTE: llama solo cuando el profesor haya dicho expresamente que guarde, y 
 }
 
 serveStdio(createServer);
-console.error(`educa-navarra-mcp ${PACKAGE_VERSION} en marcha (stdio). Configuración: ${configPath ?? "valores por defecto"}`);
+console.error(`educa-navarra-mcp ${PACKAGE_VERSION} en marcha (stdio). Configuración: ${configPath ?? "valores por defecto"}. Modo privado: ${privacy.enabled ? "activado" : "desactivado"}.${purged ? ` Capturas antiguas borradas: ${purged}.` : ""}`);
 
 const shutdown = async () => {
   await browser.close().catch(() => undefined);

@@ -22,6 +22,7 @@ import {
 } from "./convivencia.js";
 import { normalize } from "./grades.js";
 import { IncidentScreen, type IncidentCatalog } from "./incidents.js";
+import { localPage, namesInText, type Privacy } from "./privacy.js";
 
 interface StoredIncident {
   id: string;
@@ -39,7 +40,6 @@ interface StoredIncident {
 }
 
 type Content = { content: { type: "text"; text: string }[]; structuredContent?: Record<string, unknown>; isError?: boolean };
-const text = (t: string): Content => ({ content: [{ type: "text", text: t }] });
 
 export const INCIDENT_INSTRUCTIONS = `Partes de convivencia (informes de convivencia de Educa-Gestión):
 1. Recoge del docente: grupo, alumno, qué pasó, cuándo (fecha y hora o sesión) y dónde. Si falta algo esencial, pregúntalo; no inventes hechos, palabras textuales ni testigos.
@@ -65,7 +65,8 @@ function sameStudent(a: string | null, b: string): boolean {
   return a !== null && normalize(a).split(" ").sort().join(" ") === normalize(b).split(" ").sort().join(" ");
 }
 
-export function registerIncidentTools(server: McpServer, browser: EducaBrowser, config: EducaConfig, requireLogin: () => Promise<void>): { reset: () => void } {
+export function registerIncidentTools(server: McpServer, browser: EducaBrowser, config: EducaConfig, requireLogin: () => Promise<void>, privacy: Privacy): { reset: () => void } {
+  const text = (t: string): Content => ({ content: [{ type: "text", text: privacy.redact(t) }] });
   const screen = new IncidentScreen(browser, config);
   const incidents = new Map<string, StoredIncident>();
   let lastFilled: StoredIncident | null = null;
@@ -78,10 +79,12 @@ export function registerIncidentTools(server: McpServer, browser: EducaBrowser, 
 
 Si no indicas conducta, o no encaja con ninguna de Educa, devuelve la lista de conductas por categoría (con su referencia al Decreto Foral 47/2010 de convivencia de Navarra) para que elijas. El relato lo redactas tú a partir de lo que cuente el docente, con tono formal y objetivo (ver instrucciones del servidor).
 
+Modo privado (activado por defecto): no pidas el nombre del alumno. Llama sin student: se abre la lista del grupo en la ventana de Educa y el docente pulsa en el alumno (antes de llamar, avísale de que tendrá que hacerlo). El alumno aparece en la respuesta con un código (A01...) y el relato no debe contener nombres ni apellidos de alumnos del grupo: escribe "el alumno", "la alumna", "un compañero".
+
 Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill_incident.`,
       inputSchema: z.strictObject({
         group: z.string().min(1).describe('Grupo del alumno, como en Educa o parte del nombre (p. ej. "ESO 3º D", "3ºDEFH", "BTO N 1ºA")'),
-        student: z.string().min(1).describe('Alumno: nombre y apellido(s) en cualquier orden (p. ej. "Iker Muro")'),
+        student: z.string().min(1).optional().describe('Alumno: nombre y apellido(s) en cualquier orden (p. ej. "Iker Muro") o su código (A07). En modo privado, omítelo para que el docente lo elija en la ventana de Educa.'),
         report: z.string().min(1).describe(`Relato formal de lo sucedido para "Observaciones de lo sucedido" (máximo ${REPORT_MAX_CHARS} caracteres)`),
         conduct: z.string().optional().describe('Tipo de conducta: el rótulo de Educa (p. ej. "FALTA DE RESPETO") o la referencia normativa (p. ej. "art. 14 g"). Omítelo para recibir la lista.'),
         date: z.string().default("hoy").describe('Fecha del suceso: dd/mm/aaaa, "hoy" o "ayer"'),
@@ -89,20 +92,31 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
         session_time: z.string().optional().describe('Hora de la sesión (p. ej. "12:40"). Si se omite, se usa la única sesión de ese día que el docente da al alumno.'),
         family_contacted: z.boolean().default(false).describe('Marca "Contacto con la familia" (solo si el docente ya ha hablado con la familia)'),
         measure: z.string().optional().describe("Propuesta de medida, si el docente la indica (se valida contra la lista de Educa al rellenar)"),
+        ignore_name_check: z.boolean().default(false).describe("Solo si el docente confirma que las palabras señaladas por la comprobación de nombres no son nombres de alumnos (p. ej. un apellido que coincide con una palabra común)"),
         response_format: z.enum(["markdown", "json"]).default("markdown")
       }),
       annotations: { readOnlyHint: true, openWorldHint: true }
     },
     async args => {
+      const student = args.student ? privacy.resolve(args.student) : null;
+      if (!student && !privacy.enabled) throw new Error("Indica el alumno (student).");
       const date = parseIncidentDate(args.date);
       const sessionTime = args.session_time ? normalizeTime(args.session_time) : null;
-      const problems = draftProblems({ group: args.group, student: args.student, date, place: args.place, sessionTime, conduct: args.conduct ?? "", report: args.report, familyContacted: args.family_contacted, measure: args.measure ?? null });
+      const problems = draftProblems({ group: args.group, student: student ?? "(se elige en la ventana)", date, place: args.place, sessionTime, conduct: args.conduct ?? "", report: args.report, familyContacted: args.family_contacted, measure: args.measure ?? null });
       if (args.session_time && !sessionTime) problems.push(`La hora "${args.session_time}" no se entiende: usa hh:mm, p. ej. 12:40.`);
       const blocking = problems.filter(p => !p.startsWith("La fecha tiene más de dos meses"));
       if (blocking.length) return { isError: true, content: [{ type: "text", text: `No preparo el parte todavía:\n${blocking.map(p => `- ${p}`).join("\n")}` }] };
 
       await requireLogin();
-      const opened = await screen.openNewForm(args.group, args.student);
+      const opened = await screen.openNewForm(args.group, student, { hideNames: privacy.enabled });
+      if (privacy.enabled) {
+        for (const n of opened.classList) privacy.code(n);
+        privacy.code(opened.student);
+        const found = args.ignore_name_check ? [] : namesInText(args.report, opened.classList);
+        if (found.length) {
+          return { isError: true, content: [{ type: "text", text: `Modo privado: el relato contiene palabras que coinciden con nombres o apellidos de alumnos de ${opened.group}: ${found.map(w => `"${w}"`).join(", ")}. Sustitúyelas por "el alumno", "la alumna", "un compañero" o similar y vuelve a llamar. El formulario sigue abierto con el alumno elegido (${privacy.show(opened.student)}); pasa student="${privacy.show(opened.student)}". Si el docente confirma que no son nombres, usa ignore_name_check=true.` }] };
+        }
+      }
       const catalog = await screen.readCatalog();
 
       const place = matchOption(catalog.places, args.place);
@@ -118,9 +132,9 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
             : "Falta el tipo de conducta. Estas son las que ofrece Educa en este centro:",
           ...catalogMarkdown(catalog),
           "",
-          `Alumno encontrado: ${opened.student} (${opened.group}). Nada se ha escrito en Educa. Vuelve a llamar a educa_preview_incident con conduct=<rótulo>.`
+          `Alumno: ${privacy.show(opened.student)} (${opened.group}). Nada se ha escrito en Educa. Vuelve a llamar a educa_preview_incident con conduct=<rótulo>${privacy.enabled ? ` y student="${privacy.show(opened.student)}"` : ""}.`
         ];
-        if (args.response_format === "json") return { content: [{ type: "text", text: lines.join("\n") }], structuredContent: { needs_conduct: true, student: opened.student, group: opened.group, categories: catalog.categories, conducts: catalog.conducts.map(c => ({ ...c, normative: normativeFor(c.label) ?? null })), places: catalog.places } };
+        if (args.response_format === "json") return { content: [{ type: "text", text: lines.join("\n") }], structuredContent: { needs_conduct: true, student: privacy.show(opened.student), group: opened.group, categories: catalog.categories, conducts: catalog.conducts.map(c => ({ ...c, normative: normativeFor(c.label) ?? null })), places: catalog.places } };
         return text(lines.join("\n"));
       }
 
@@ -141,7 +155,20 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
       incidents.set(stored.id, stored);
       const norm = normativeFor(stored.conduct.label);
       const warnings = [...problems];
-      if (opened.approximate) warnings.push(`El alumno se ha encontrado por nombre aproximado: confirma con el docente que es ${opened.student}.`);
+      if (opened.approximate) warnings.push(`El alumno se ha encontrado por nombre aproximado: confirma con el docente que es ${privacy.enabled ? "el de la pestaña de vista previa" : opened.student}.`);
+      if (privacy.enabled) {
+        await browser
+          .showLocal(
+            localPage(
+              "Vista previa del parte",
+              `Parte ${stored.id} · ${stored.group} · ${formatDate(stored.date)} · ${stored.place} · ${stored.conduct.label}`,
+              ["Código", "Alumno", "Relato"],
+              [[privacy.code(stored.student), stored.student, stored.report]],
+              "Nada se ha escrito todavía en Educa. Comprueba que el alumno es el correcto y díselo a Claude en el chat."
+            )
+          )
+          .catch(() => undefined);
+      }
       if (!/sesi[oó]n/i.test(stored.place) && sessionTime) warnings.push("Se ha indicado hora, pero el espacio elegido no suele pedir sesión; se ignorará si Educa no la pide.");
 
       if (args.response_format === "json") {
@@ -149,7 +176,7 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
           content: [{ type: "text", text: JSON.stringify({ incident_id: stored.id }) }],
           structuredContent: {
             incident_id: stored.id,
-            student: stored.student,
+            student: privacy.show(stored.student),
             group: stored.group,
             date: formatDate(stored.date),
             place: stored.place,
@@ -166,7 +193,7 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
       const lines = [
         `# Vista previa del parte (${stored.id})`,
         "",
-        `- Alumno: **${stored.student}** (${stored.group})`,
+        `- Alumno: **${privacy.show(stored.student)}** (${stored.group})${privacy.enabled ? " · nombre en la pestaña local de vista previa" : ""}`,
         `- Fecha del suceso: ${formatDate(stored.date)}`,
         `- Espacio: ${stored.place}${/sesi[oó]n/i.test(stored.place) ? ` · sesión: ${stored.sessionTime ?? "la que das ese día a este alumno"}` : ""}`,
         `- Tipo de conducta: **${stored.conduct.label}** (${stored.conduct.category}${norm ? `; ${norm.ref} del DF 47/2010, ${CATEGORY_LABEL[norm.category]}` : ""})`,
@@ -202,6 +229,7 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
       const stored = incidents.get(incident_id);
       if (!stored) throw new Error(`No existe el parte ${incident_id}. Prepáralo con educa_preview_incident.`);
       if (Date.now() - stored.createdAt > 30 * 60_000) throw new Error("La vista previa tiene más de 30 minutos; vuelve a generarla.");
+      await browser.focusEduca();
       // Formulario limpio del mismo alumno: si hay otro abierto (o ya tocado), se descarta y se abre uno nuevo
       if (!(await screen.isPristineFormFor(stored.student))) await screen.openNewForm(stored.group, stored.student);
       const res = await screen.fill({
@@ -216,7 +244,7 @@ Después: enseña la vista previa al docente y, si da el visto bueno, educa_fill
       stored.filled = true;
       lastFilled = stored;
       const lines = [
-        `Parte de ${stored.student} rellenado en pantalla. **Todavía no se ha guardado nada en Educa.**`,
+        `Parte de ${privacy.show(stored.student)} rellenado en pantalla. **Todavía no se ha guardado nada en Educa.**`,
         "",
         `- Fecha: ${res.date}`,
         `- Espacio: ${res.place}${res.session ? ` · sesión: ${res.session}` : ""}`,
@@ -249,12 +277,12 @@ IMPORTANTE: llama solo cuando el docente haya dicho expresamente que lo guarde, 
       await requireLogin();
       if (!lastFilled) throw new Error("No se ha rellenado ningún parte en esta sesión. Usa educa_preview_incident y educa_fill_incident primero.");
       const current = await screen.openFormStudent();
-      if (!sameStudent(current, lastFilled.student)) throw new Error(`El formulario abierto no es el del parte rellenado (${lastFilled.student}). Vuelve a usar educa_fill_incident.`);
+      if (!sameStudent(current, lastFilled.student)) throw new Error(`El formulario abierto no es el del parte rellenado (${privacy.show(lastFilled.student)}). Vuelve a usar educa_fill_incident.`);
       const before = await browser.screenshot("parte-antes-de-guardar");
       const res = await screen.save(send);
       const after = await browser.screenshot("parte-despues-de-guardar");
       const verdict = res.outcome === "ok" ? "Educa confirma que se ha guardado." : res.outcome === "error" ? "Educa muestra un error." : "No he visto un mensaje claro de confirmación; comprueba la pantalla.";
-      const lines = [`Pulsado "${res.button}" en el parte de ${lastFilled.student}. ${verdict}`];
+      const lines = [`Pulsado "${res.button}" en el parte de ${privacy.show(lastFilled.student)}. ${verdict}`];
       if (res.message) lines.push(`Mensaje: ${res.message.slice(0, 500)}`);
       if (res.state) lines.push(`Estado del informe: ${res.state}`);
       if (res.step) lines.push(`Paso de Educa: ${res.step}`);
@@ -265,7 +293,7 @@ IMPORTANTE: llama solo cuando el docente haya dicho expresamente que lo guarde, 
         incidents.delete(lastFilled.id);
         lastFilled = null;
       }
-      return { isError: res.outcome === "error", content: [{ type: "text", text: lines.join("\n") }] };
+      return { isError: res.outcome === "error", content: [{ type: "text", text: privacy.redact(lines.join("\n")) }] };
     }
   );
 

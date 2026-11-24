@@ -33,7 +33,8 @@ await client.connect(
       EDUCA_CREDENTIALS_FILE: credentials,
       EDUCA_CONFIG: resolve("test/mock/educa.config.json"),
       EDUCA_MCP_HOME: home,
-      EDUCA_NOTES_DIR: resolve("test/mock")
+      EDUCA_NOTES_DIR: resolve("test/mock"),
+      EDUCA_PRIVATE_MODE: "0" // esta prueba comprueba los nombres; el modo privado tiene la suya (smoke-private.ts)
     },
     stderr: "inherit"
   })

@@ -6,6 +6,7 @@ import { readFile } from "node:fs/promises";
 import { extname } from "node:path";
 import ExcelJS from "exceljs";
 import type { EducaConfig } from "./config.js";
+import { fillNamePlaceholder } from "./privacy.js";
 
 // ---------- Tipos compartidos con browser.ts ----------
 
@@ -520,7 +521,8 @@ export interface PlanOptions {
 }
 
 function planComment(item: PlanItem, row: SheetRow, opts: PlanOptions): void {
-  const wanted = cleanComment(item.comment ?? "");
+  // {nombre} se sustituye en local por el nombre de pila del alumno en Educa
+  const wanted = cleanComment(fillNamePlaceholder(item.comment ?? "", row.name));
   if (!wanted) return;
   item.comment = wanted;
   const c = row.comment;

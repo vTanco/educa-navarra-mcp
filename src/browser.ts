@@ -6,7 +6,7 @@
  * certificado) y la sesión se reutiliza mientras Educa la mantenga.
  * Las contraseñas nunca pasan por el modelo.
  */
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { type BrowserContext, type Frame, type Locator, type Page } from "playwright";
 import { loadCredentials, type EducaConfig } from "./config.js";
@@ -15,6 +15,8 @@ import { launchEducaBrowser } from "./launch.js";
 
 export class EducaBrowser {
   private context: BrowserContext | null = null;
+  /** Pestañas locales (vista previa con nombres reales): nunca son "la página de Educa". */
+  private readonly localPages = new WeakSet<Page>();
 
   constructor(private readonly config: EducaConfig) {}
 
@@ -33,8 +35,56 @@ export class EducaBrowser {
         this.context = null;
       });
     }
-    const pages = this.context.pages().filter(p => !p.isClosed());
+    const pages = this.context.pages().filter(p => !p.isClosed() && !this.localPages.has(p));
     return pages.at(-1) ?? (await this.context.newPage());
+  }
+
+  /**
+   * Abre (o reutiliza) una pestaña local con el HTML dado y la pone delante.
+   * El contenido no sale del ordenador: se carga directamente, sin URL ni fichero.
+   */
+  async showLocal(html: string): Promise<void> {
+    const educa = await this.page();
+    const context = educa.context();
+    let local = context.pages().find(p => !p.isClosed() && this.localPages.has(p));
+    if (!local) {
+      local = await context.newPage();
+      this.localPages.add(local);
+    }
+    await local.setContent(html, { waitUntil: "domcontentloaded" });
+    await local.bringToFront().catch(() => undefined);
+  }
+
+  /** Vuelve a poner delante la pestaña de Educa (tras enseñar una vista previa local). */
+  async focusEduca(): Promise<void> {
+    if (!this.context) return;
+    await (await this.page()).bringToFront().catch(() => undefined);
+  }
+
+  /** Borra las capturas de pantalla con más de N días. Devuelve cuántas ha borrado. */
+  purgeOldScreenshots(days: number): number {
+    if (days <= 0) return 0;
+    const limit = Date.now() - days * 86_400_000;
+    let removed = 0;
+    let files: string[] = [];
+    try {
+      files = readdirSync(this.config.screenshotDir);
+    } catch {
+      return 0;
+    }
+    for (const f of files) {
+      if (!f.endsWith(".png")) continue;
+      const path = join(this.config.screenshotDir, f);
+      try {
+        if (statSync(path).mtimeMs < limit) {
+          unlinkSync(path);
+          removed++;
+        }
+      } catch {
+        // fichero en uso o ya borrado
+      }
+    }
+    return removed;
   }
 
   get isOpen(): boolean {

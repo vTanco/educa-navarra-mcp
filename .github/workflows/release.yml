@@ -34,6 +34,7 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run smoke
+      - run: npm run smoke:private
       - run: npm run pack:mcpb
       - name: Crear la versión en GitHub con el paquete de Claude Desktop
         env:

@@ -18,27 +18,45 @@ La herramienta no utiliza ninguna interfaz privada ni salta ninguna medida de se
 
 ## 3. Datos personales (RGPD y LOPDGDD)
 
-Las notas y los nombres del alumnado son datos personales de menores en muchos casos. Conviene que sepas exactamente por dónde pasan:
+Los datos de Educa están sujetos a la Ley Orgánica 3/2018, de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD), y al Reglamento General de Protección de Datos (RGPD). El responsable de esos datos es el Departamento de Educación; quien accede a Educa los trata bajo sus instrucciones y con deber de confidencialidad. La herramienta está diseñada para ayudar a cumplir esa normativa, pero el cumplimiento depende también de cómo la uses y de lo que autoricen tu centro y el Departamento.
 
-| Dato | Dónde está | ¿Sale de tu ordenador? |
-|---|---|---|
-| Usuario y contraseña de Educa | En tu ordenador (Claude Desktop los guarda cifrados; en las otras opciones, en el fichero o variables que tú configures) | Solo hacia el formulario de acceso de Educa |
-| Sesión del navegador | Carpeta `.educa-mcp` de tu usuario | No |
-| Tu Excel o CSV | Donde tú lo guardes | El conector lo lee en local; **lo que Claude muestre en el chat sí pasa por la IA** |
-| Nombres, notas y observaciones de Educa (vista previa, lecturas, capturas) | Se envían como respuesta de las herramientas | **Sí: forman parte de la conversación con el proveedor de IA que uses** |
-| Lo que cuentas para un parte de convivencia y el relato redactado | En la conversación y, al guardarlo, en Educa | **Sí: forma parte de la conversación con el proveedor de IA que uses** |
+### Modo privado (activado por defecto)
+
+Con el modo privado, el proveedor de IA no recibe datos identificativos del alumnado:
+
+- Cada alumno aparece en las respuestas de la herramienta con un código (A01, A02…). La correspondencia entre códigos y nombres solo existe en la memoria de tu ordenador mientras la herramienta está abierta; no se guarda en disco.
+- No se envían NIA ni el texto de las observaciones para las familias.
+- La vista previa con nombres se abre en una pestaña del navegador de la herramienta, en tu ordenador.
+- En los partes de convivencia eliges al alumno en la ventana de Educa, y la herramienta rechaza relatos que contengan nombres o apellidos de alumnos del grupo.
+- Las herramientas que devolverían el contenido completo de la página quedan desactivadas o recortadas.
+
+Un dato seudonimizado sigue siendo, en principio, un dato personal para quien puede reidentificarlo (en este caso, solo tú). El modo privado reduce mucho el riesgo, pero lo que escribas tú en el chat sí llega a la IA.
+
+Desactiva el modo privado solo si tu centro o el Departamento han autorizado expresamente tratar datos del alumnado con la herramienta de IA que uses.
+
+### Por dónde pasa cada dato
+
+| Dato | Dónde está | ¿Llega a la IA con modo privado? | ¿Y sin él? |
+|---|---|---|---|
+| Usuario y contraseña de Educa | En tu ordenador (Claude Desktop los guarda cifrados; en las otras opciones, en el fichero o variables que tú configures) | No | No |
+| Sesión del navegador | Carpeta `.educa-mcp` de tu usuario | No | No |
+| Nombres y NIA del alumnado | Educa y tu Excel | No: solo códigos | Sí |
+| Notas | Educa y tu Excel | Sí, asociadas a un código | Sí, con el nombre |
+| Observaciones para las familias | Tu Excel y Educa | No (solo cuántas hay) | Sí |
+| Relato de un parte de convivencia | La conversación y, al guardarlo, Educa | Sí, sin nombres de alumnos | Sí |
+| Lo que tú escribes en el chat | La conversación | Sí | Sí |
+| Capturas de pantalla al guardar | Carpeta `.educa-mcp/capturas`; se borran a los 30 días | No | No |
 
 El proyecto **no tiene servidores propios** y no recoge, almacena ni recibe ningún dato: ni credenciales, ni datos del alumnado, ni estadísticas de uso.
 
-Lo que sí ocurre es que la aplicación de IA que uses (por ejemplo Claude, de Anthropic) recibe el contenido de la conversación, incluidos los nombres y notas que las herramientas le devuelven. Ese tratamiento se rige por las condiciones y la política de privacidad de ese proveedor y por el tipo de cuenta que tengas. **Antes de usarla con datos reales, comprueba que tu centro o el Departamento permiten tratar datos del alumnado con esa herramienta de IA**, y en caso de duda consulta con la persona delegada de protección de datos.
+La aplicación de IA que uses (por ejemplo Claude, de Anthropic) recibe el contenido de la conversación. Ese tratamiento se rige por las condiciones y la política de privacidad de ese proveedor y por el tipo de cuenta que tengas. En caso de duda, consulta con la persona delegada de protección de datos del Departamento.
 
-Para reducir los datos que se comparten:
+Para reducir aún más los datos que se comparten:
 
-- En Claude, desactiva en **Ajustes → Privacidad** el uso de tus conversaciones para mejorar los modelos (*Ayudar a mejorar Claude*).
-- Recuerda que la conversación, con los datos que contenga, puede quedar en tu historial: borra las que ya no necesites.
-- Usa el fichero con solo las columnas necesarias (alumno y nota).
-- En los partes, cuenta solo los hechos necesarios: sin nombres de otros alumnos ni datos de salud o familiares que no hagan falta.
-- No pidas capturas de pantalla ni volcados de la página si no hace falta.
+- Mantén activado el modo privado.
+- No escribas en el chat nombres de alumnos ni datos de salud o familiares.
+- En Claude, desactiva en **Ajustes → Privacidad** el uso de tus conversaciones para mejorar los modelos (*Ayudar a mejorar Claude*) y borra las conversaciones que ya no necesites.
+- No uses la herramienta en un ordenador compartido: el navegador recuerda la sesión de Educa.
 - Si abres un aviso en GitHub, **no incluyas nombres ni notas reales**.
 
 ## 4. Sin garantía

@@ -2,6 +2,17 @@
 
 Este proyecto sigue [versionado semántico](https://semver.org/lang/es/).
 
+## 1.4.0 · 2026-11-24
+
+- **Modo privado**, activado por defecto, para ayudar a cumplir la LOPDGDD y el RGPD: el modelo de IA ve a cada alumno con un código (A01, A02…) en lugar de su nombre y no recibe NIA ni el texto de las observaciones. La tabla de códigos solo vive en la memoria del ordenador. Se desactiva con el ajuste *Modo privado* de Claude Desktop o `EDUCA_PRIVATE_MODE=0`.
+- La vista previa de notas (y la de partes) con nombres reales se abre en una pestaña local del navegador del conector; al chat solo llegan el resumen y los avisos con códigos.
+- Partes de convivencia: con el modo privado, el docente elige al alumno pulsando en la ventana de Educa (`educa_preview_incident` sin `student`), y el conector rechaza relatos que contengan nombres o apellidos de alumnos del grupo.
+- Observaciones: el comodín `{nombre}` se sustituye en local por el nombre de pila de cada alumno.
+- En modo privado, `educa_dump_html` queda desactivada, `educa_inspect_page` oculta las filas de las tablas y `educa_load_grades_file` solo devuelve recuentos.
+- Las capturas de pantalla se borran solas a los 30 días (`screenshotRetentionDays`).
+- Nueva prueba `npm run smoke:private` que comprueba que ninguna respuesta lleva nombres.
+- README y aviso legal: sección de protección de datos renovada.
+
 ## 1.3.0 · 2026-11-17
 
 - Partes de convivencia: Claude redacta el informe con tono formal a partir de lo que cuente el docente, propone el tipo de conducta con su artículo del Decreto Foral 47/2010 de Navarra y lo registra en Educa-Gestión → Gestión académica → Convivencia. Tres herramientas nuevas: `educa_preview_incident` (abre el formulario del alumno, lee espacios y conductas de Educa y enseña el parte completo, sin escribir nada), `educa_fill_incident` (rellena fecha, espacio, sesión, relato, contacto con la familia, conducta y medida, sin guardar) y `educa_save_incident` (pulsa *Guardar* para dejarlo en borrador, o *Guardar y enviar* si se pide, solo con `confirm=true`).
