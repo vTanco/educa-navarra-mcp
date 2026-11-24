@@ -30,6 +30,13 @@ Flujo:
 5. Solo si el docente da el visto bueno, educa_fill_grades (escribe en pantalla sin guardar). Pídele que lo revise en la ventana del navegador.
 6. educa_save_grades únicamente tras una confirmación expresa del docente en este momento ("sí, guarda"). Nunca la des por supuesta.
 
+Modo privado (activado por defecto; las respuestas lo indican con "Modo privado" o private_mode):
+- Los alumnos aparecen con códigos (A01, A02...). Úsalos tal cual; no pidas al docente nombres, NIA ni notas por el chat, y no intentes adivinar quién es cada código.
+- La vista previa completa, con nombres y observaciones, se abre en una pestaña del navegador del conector, solo en el ordenador del docente. Pídele que la revise allí y enséñale en el chat el resumen y los avisos con códigos.
+- Para las observaciones que redactes a petición del docente, usa {nombre} donde vaya el nombre del alumno: el conector lo sustituye en local por su nombre de pila.
+- En los partes, deja que el docente elija al alumno en la ventana de Educa (educa_preview_incident sin student) y no pongas nombres de alumnos en el relato.
+- Si el docente escribe un nombre en el chat, no lo repitas: refiérete al alumno por su código.
+
 Reglas:
 - No redondees ni inventes notas: si una nota no vale para la escala de la pantalla, díselo y que la corrija en su fichero.
 - Las coincidencias de nombre aproximadas no se escriben sin confirmación.
@@ -184,7 +191,7 @@ export function registerGuide(server: McpServer): void {
       description: "Redacta un parte a partir de lo que cuentes y lo registra en Educa tras tu visto bueno.",
       argsSchema: z.object({
         grupo: z.string().describe("Grupo del alumno (p. ej. ESO 3º D)"),
-        alumno: z.string().describe("Nombre y apellido del alumno"),
+        alumno: z.string().optional().describe("Opcional. Con el modo privado, déjalo vacío y elige al alumno en la ventana de Educa"),
         que_paso: z.string().describe("Qué ha pasado, cuándo y dónde, con tus palabras")
       })
     },
@@ -194,7 +201,7 @@ export function registerGuide(server: McpServer): void {
           role: "user" as const,
           content: {
             type: "text" as const,
-            text: `Quiero poner un parte en Educa a ${alumno}, de ${grupo}. Lo que ha pasado: ${que_paso}\n\nRedáctalo con tono formal, propón el tipo de conducta y enséñame la vista previa. No guardes nada hasta que yo te lo diga.`
+            text: `Quiero poner un parte en Educa a ${alumno?.trim() ? alumno : "un alumno (lo elegiré en la ventana de Educa)"}, de ${grupo}. Lo que ha pasado: ${que_paso}\n\nRedáctalo con tono formal, propón el tipo de conducta y enséñame la vista previa. No guardes nada hasta que yo te lo diga.`
           }
         }
       ]

@@ -149,3 +149,27 @@ assert.match(draftProblems({ group: "g", student: "s", date: hoy, place: "p", se
 assert.match(draftProblems({ group: "g", student: "s", date: new Date(2026, 10, 20), place: "p", sessionTime: null, conduct: "", report: largo.slice(0, 200), familyContacted: false, measure: null }, hoy).join(), /posterior a hoy/);
 assert.deepEqual(draftProblems({ group: "g", student: "s", date: hoy, place: "p", sessionTime: null, conduct: "", report: largo.slice(0, 200), familyContacted: false, measure: null }, hoy), []);
 console.log("Pruebas de partes de convivencia: OK");
+
+// ---------- Modo privado ----------
+import { fillNamePlaceholder, firstName, namesInText, parsePrivateFlag, Privacy } from "../src/privacy.js";
+{
+  const pv = new Privacy(true);
+  const a = pv.code("GARCÍA LÓPEZ, Ana");
+  assert.equal(a, "A01");
+  assert.equal(pv.code("Ana García López"), "A01", "mismo alumno en otro orden, mismo código");
+  assert.equal(pv.code("Pérez Martínez, Iñigo"), "A02");
+  assert.equal(pv.resolve("a02"), "Pérez Martínez, Iñigo");
+  assert.equal(pv.resolve("A99"), "A99");
+  assert.equal(pv.resolve("Ruiz, Pablo"), "Ruiz, Pablo");
+  assert.equal(pv.redact("Botones: GARCÍA LÓPEZ , Ana · Iñigo Pérez Martínez"), "Botones: A01 · A02");
+  assert.equal(new Privacy(false).show("Ruiz, Pablo"), "Ruiz, Pablo");
+  assert.deepEqual(namesInText("El alumno Muro empujó a un compañero en el recreo.", ["Muro Etxeberria, Iker", "Arana Goñi, Leire"]), ["muro"]);
+  assert.deepEqual(namesInText("El alumno se negó a guardar el móvil.", ["Muro Etxeberria, Iker"]), []);
+  assert.equal(firstName("MURO ETXEBERRIA, IKER"), "Iker");
+  assert.equal(fillNamePlaceholder("Buen trabajo, {nombre}.", "García López, Ana"), "Buen trabajo, Ana.");
+  assert.equal(parsePrivateFlag("false"), false);
+  assert.equal(parsePrivateFlag("true"), true);
+  assert.equal(parsePrivateFlag("${user_config.modo_privado}"), null);
+  assert.equal(parsePrivateFlag(undefined), null);
+}
+console.log("Pruebas del modo privado: OK");

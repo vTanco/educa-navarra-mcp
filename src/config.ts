@@ -12,6 +12,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as z from "zod/v4";
+import { parsePrivateFlag } from "./privacy.js";
 
 /** Carpeta del servidor (la que contiene dist/ y package.json). */
 export const PROJECT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -118,6 +119,15 @@ const ConfigSchema = z.object({
    */
   noGradeGroups: z.array(z.string()).default([]),
 
+  /**
+   * Modo privado: las respuestas al modelo llevan códigos (A01, A02...) en vez de nombres,
+   * sin NIA ni texto de observaciones, y la vista previa con nombres se abre en una pestaña local.
+   */
+  privateMode: z.boolean().default(true),
+
+  /** Días que se conservan las capturas de pantalla antes de borrarlas al arrancar (0 = no borrar). */
+  screenshotRetentionDays: z.number().int().min(0).default(30),
+
   /** El servidor nunca pulsa elementos cuyo texto encaje con esto. */
   forbiddenClickPattern: z
     .string()
@@ -186,6 +196,8 @@ function applyEnv(config: EducaConfig): EducaConfig {
   if (noGrade && !noGrade.startsWith("${")) {
     config.noGradeGroups = [...config.noGradeGroups, ...noGrade.split(/[,;\n]+/).map(g => g.trim()).filter(Boolean)];
   }
+  const priv = parsePrivateFlag(process.env.EDUCA_PRIVATE_MODE);
+  if (priv !== null) config.privateMode = priv;
   if (process.env.EDUCA_ALLOWED_HOSTS) config.allowedHosts = process.env.EDUCA_ALLOWED_HOSTS.split(",");
   return config;
 }

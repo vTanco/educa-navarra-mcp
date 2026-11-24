@@ -18,6 +18,8 @@ export interface SavedIncident {
   enviado: boolean;
 }
 export const savedIncidents: SavedIncident[] = [];
+/** Para las pruebas del modo privado: si tiene un nombre, la lista de alumnos "pulsa" sola en ese alumno, como haría el docente. */
+export const mockConvivencia: { autoPick: string | null } = { autoPick: null };
 
 const GROUPS = { "Da clase": ["BTO N 1ºA", "ESO 1ºCD plu", "ESO 3ºDEFH cd"], "Resto de grupos": ["ESO 3º D", "ESO 3º E", "BTO 1º A"] };
 const STUDENTS: Record<string, string[]> = {
@@ -63,7 +65,7 @@ export async function convivenciaRoute(url: URL, req: IncomingMessage, send: (ht
   if (url.pathname === "/convivencia/nuevo") {
     const grupo = url.searchParams.get("grupo") ?? "";
     const alumnos = (STUDENTS[grupo] ?? []).map(a => `<div class="alumno" onclick="location.href='/convivencia/parte?grupo=${encodeURIComponent(grupo)}&alumno=${encodeURIComponent(a)}'"><div class="foto"><img></div><p class="nombreAlumno">${a}</p></div>`).join("");
-    send(page("EducaGestion", `<div class="infoSeleccion"><span>${grupo}</span></div><app-nuevo-parte><app-seleccionar-alumno><app-selector-alumno-lista><app-mosaico><div class="mosaico">${alumnos}</div></app-mosaico></app-selector-alumno-lista></app-seleccionar-alumno></app-nuevo-parte>`));
+    send(page("EducaGestion", `<div class="infoSeleccion"><span>${grupo}</span></div><app-nuevo-parte><app-seleccionar-alumno><app-selector-alumno-lista><app-mosaico><div class="mosaico">${alumnos}</div></app-mosaico></app-selector-alumno-lista></app-seleccionar-alumno></app-nuevo-parte>${mockConvivencia.autoPick ? `<script>setTimeout(()=>{for(const a of document.querySelectorAll(".alumno"))if(a.textContent.includes(${JSON.stringify(mockConvivencia.autoPick)}))a.click();},2500)</script>` : ""}`));
     return true;
   }
   if (url.pathname === "/convivencia/parte") {

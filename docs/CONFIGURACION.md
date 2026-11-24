@@ -44,6 +44,7 @@ La sesión de Educa se guarda en un perfil propio del navegador (no toca tu perf
 |---|---|
 | `EDUCA_USER`, `EDUCA_PASSWORD` | Inicio de sesión automático |
 | `EDUCA_NO_GRADE_GROUPS` | Grupos en los que no pones notas, separados por comas (p. ej. `ESO 2º D, ESO 2º E`). El conector se niega a escribir o guardar en ellos. En el fichero de configuración: `noGradeGroups` |
+| `EDUCA_PRIVATE_MODE` | Modo privado: `1` (por defecto) o `0`. Con `1`, las respuestas a la IA llevan códigos (A01, A02…) en vez de nombres, sin NIA ni texto de observaciones, y la vista previa con nombres se abre en una pestaña local. Desactívalo solo con autorización del centro o del Departamento. En el fichero de configuración: `privateMode` |
 | `EDUCA_NOTES_DIR` | Carpeta de notas que lista `educa_list_grade_files` (por defecto `~/Documents/Notas Educa`) |
 | `EDUCA_CREDENTIALS_FILE` | Ruta a un fichero `{"usuario": "...", "clave": "..."}` (por defecto `~/.educa-mcp/credenciales.json`) |
 | `EDUCA_BROWSER_CHANNEL` | `chrome`, `msedge` o `chromium` (el de Playwright) |
@@ -67,6 +68,8 @@ Opcional. Se busca en `EDUCA_CONFIG`, en `educa.config.json` de la carpeta actua
 | `gradeSheet.*` | Selectores de fila, nombre y campo de nota si la tabla no se detecta sola |
 | `save.buttonSelector` | Selector del botón de guardar si no se llama *Guardar/Grabar/Aceptar* |
 | `noGradeGroups` | Grupos en los que no pones notas; el conector se niega a escribir en ellos |
+| `privateMode` | Modo privado (por defecto `true`); ver `EDUCA_PRIVATE_MODE` |
+| `screenshotRetentionDays` | Días que se guardan las capturas antes de borrarlas al arrancar (por defecto `30`; `0` = no borrar) |
 | `gradesScreen.path`, `gradesScreen.menu` | Ruta de Educa-Gestión y entradas de menú hasta la pantalla de calificaciones, si en tu centro son distintas |
 | `incidentScreen.path`, `incidentScreen.menu` | Ruta de Educa-Gestión y entradas de menú hasta los informes de convivencia (por defecto *GESTIÓN ACADÉMICA → CONVIVENCIA*) |
 | `forbiddenClickPattern` | Botones que nunca se pulsan |

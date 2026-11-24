@@ -38,6 +38,17 @@ export interface OpenedForm {
   group: string;
   student: string;
   approximate: boolean;
+  /** Alumnos del grupo tal como los lista Educa (para comprobar que el relato no los nombra). */
+  classList: string[];
+  /** true si el docente ha elegido al alumno pulsando en la ventana. */
+  pickedInWindow: boolean;
+}
+
+export interface OpenFormOptions {
+  /** No incluir nombres de alumnos en los mensajes de error (modo privado). */
+  hideNames?: boolean;
+  /** Minutos que se espera a que el docente pulse en el alumno cuando no se indica (por defecto 3). */
+  pickMinutes?: number;
 }
 
 export interface FillInput {
@@ -138,8 +149,12 @@ export class IncidentScreen {
     return !report && !date && conducts === 0;
   }
 
-  /** Abre un parte nuevo para un alumno de un grupo. No escribe nada en el formulario. */
-  async openNewForm(group: string, student: string): Promise<OpenedForm> {
+  /**
+   * Abre un parte nuevo para un alumno de un grupo. No escribe nada en el formulario.
+   * Sin alumno (student = null), deja abierta la lista del grupo y espera a que el docente
+   * pulse en el alumno en la ventana del navegador.
+   */
+  async openNewForm(group: string, student: string | null, opts: OpenFormOptions = {}): Promise<OpenedForm> {
     await this.discardOpenForm();
     await this.openList();
     const page = await this.page();
@@ -186,8 +201,31 @@ export class IncidentScreen {
       throw new Error(`No se ha cargado la lista de alumnos de ${chosen.group}.`);
     });
     const list = (await names.allInnerTexts()).map(t => t.replace(/\s+/g, " ").trim()).filter(Boolean);
+    if (student === null) {
+      // El docente elige al alumno en la ventana: se espera a que se abra el formulario
+      await page.bringToFront().catch(() => undefined);
+      const deadline = Date.now() + (opts.pickMinutes ?? 3) * 60_000;
+      while (Date.now() < deadline) {
+        if (await this.form(page).isVisible().catch(() => false)) break;
+        await page.waitForTimeout(1000);
+      }
+      if (!(await this.form(page).isVisible().catch(() => false))) {
+        throw new Error(`No se ha elegido ningún alumno en la ventana de Educa en ${opts.pickMinutes ?? 3} minutos. La lista de ${chosen.group} sigue abierta: pide al docente que pulse en el alumno y vuelve a llamar.`);
+      }
+      await settle(page);
+      const picked = await this.openFormStudent();
+      if (!picked) throw new Error("Se ha abierto el formulario, pero no consigo leer el nombre del alumno elegido.");
+      return { group: chosen.group, student: picked, approximate: false, classList: list, pickedInWindow: true };
+    }
     const m = matchStudent(list, student);
     if (!m.ok) {
+      if (opts.hideNames) {
+        throw new Error(
+          m.reason === "varios"
+            ? `En ${chosen.group} hay ${m.candidates.length} alumnos que encajan con lo indicado. Modo privado: llama sin student para que el docente elija al alumno en la ventana de Educa.`
+            : `No encuentro a ese alumno en ${chosen.group}. Modo privado: llama sin student para que el docente elija al alumno en la ventana de Educa.`
+        );
+      }
       throw new Error(
         m.reason === "varios"
           ? `En ${chosen.group} hay varios alumnos que encajan con "${student}": ${m.candidates.join(" / ")}. Indica también el apellido.`
@@ -199,7 +237,7 @@ export class IncidentScreen {
     await this.form(page).waitFor({ state: "visible", timeout: 10_000 }).catch(() => {
       throw new Error("No se ha abierto el formulario del informe de convivencia.");
     });
-    return { group: chosen.group, student: m.item, approximate: m.approximate };
+    return { group: chosen.group, student: m.item, approximate: m.approximate, classList: list, pickedInWindow: false };
   }
 
   /** Nombre del alumno del formulario abierto, o null si no hay formulario. */
